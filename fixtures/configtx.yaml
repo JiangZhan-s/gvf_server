@@ -1,0 +1,135 @@
+
+Organizations:
+
+    # orderer 组织
+    - &OrdererOrg
+        Name: OrdererOrg
+        ID: OrdererOrg
+        MSPDir: crypto-config/ordererOrganizations/example.com/msp
+        Policies: #组织内权限配置
+            Readers: #读权限
+                Type: Signature #策略类型为非组合签名策略
+                Rule: "OR('OrdererOrg.member')" #满足排序组织任意成员的签名
+            Writers: #写权限
+                Type: Signature
+                Rule: "OR('OrdererOrg.member')"
+            Admins: #管理权限
+                Type: Signature
+                Rule: "OR('OrdererOrg.admin')" #满足排序组织任意管理员签名
+
+    # peer 组织
+    - &Org1
+        Name: Org1MSP
+        ID: Org1MSP
+        MSPDIR: crypto-config/peerOrganizations/org1.example.com/msp
+        AnchorPeers: #Org1组织的锚节点配置，用来组织间进行通信
+            - Host: peer0.org1.example.com #节点名称
+              Port: 7051 #节点暴露的端口
+        Policies: #Org1组织的权限配置
+            Readers:
+                Type: Signature
+                Rule: "OR('Org1MSP.admin','Org1MSP.peer','Org1MSP.client','Org1MSP.member')" #满足Org1组织admin,peer,client中任意成员的签名，这里可以解释为Org1组织内非orderer角色的任意成员签名
+            Writers:
+                Type: Signature
+                Rule: "OR('Org1MSP.admin','Org1MSP.client','Org1MSP.member')" #满足Org1组织admin，client中任意成员签名
+            Admins:
+                Type: Signature
+                Rule: "OR('Org1MSP.admin')" #满足Org1组织任意admin成员的签名
+
+
+Capabilities: #以下定义了关于通道服务，排序服务，应用服务对于orderer以及peer版本的兼容性指定
+
+    Channel: &ChannelCapabilities #通道范围内对于orderer以及peer版本的兼容性
+        V1_3: true  #对于高于v1.3版本的orderer以及peer的镜像均被兼容，低于v1.3版本将不被兼容
+
+    Orderer: &OrdererCapabilities #对于排序节点orderer的版本兼容性指定
+        V1_1: true  #低于v1.1版本的orderer在排序服务上不被兼容
+
+    Application: &ApplicationCapabilities #对于与应用之间进行交互的peer节点的版本兼容性的指定
+        V1_3: true  #低于v1.3的peer节点在应用上不被兼容
+        V1_2: false #这里因为指定了V1_3为true，故这一行配置有无均可
+        V1_1: false #同上
+
+Application: &ApplicationDefaults
+    Organizations:
+        - *Org1
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        LifecycleEndorsement:
+            Type: Signature
+            Rule: "OR('Org1MSP.member')"
+        Endorsement:
+            Type: Signature
+            Rule: "OR('Org1MSP.member')"
+    Capabilities:
+        <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults #orderer部分的配置，主要用于产生第一笔配置交易以及创世块的相关参数，这部分会在profile处被引用
+    OrdererType: solo  #orderer达成共识的方式，有solo，kafka，etchraft  
+    Addresses: #orderer地址
+        - orderer.example.com:7050
+    BatchTimeout: 2s  #这里指定了orderer切割区块的超时时间
+    BatchSize:  #这里指定了orderer切割区块大小的阈值
+        MaxMessageCount: 10  #这里指定了一个区块内的最大交易数量为200笔交易
+        AbsoluteMaxBytes: 99 MB  #这里指定了一个区块大小的阈值，超过这个大小后，即分割batch，生成区块
+        PreferredMaxBytes: 512 KB  #这里指定了单笔交易成块的阈值，即如果有一笔交易的到小超过当前阈值，则此笔交易单独成块
+
+ 
+    Organizations:  #排序服务的策略配置
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+
+
+Channel: &ChannelDefaults  #通道默认配置，在下面Porfile处被调用
+    Policies:
+        Readers:
+            Type: Signature
+            Rule: "OR('Org1MSP.member', 'Org2MSP.member')"
+        Writers:
+            Type: Signature
+            Rule: "OR('Org1MSP.member', 'Org2MSP.member')"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+    Capabilities:
+        <<: *ChannelCapabilities  #引用了通道服务对peer，orderer的版本兼容配置
+
+Profiles:
+    TwoOrgsOrdererGenesis:
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *Org1
+    TwoOrgsChannel:
+        Consortium: SampleConsortium
+        <<: *ChannelDefaults    #通道默认配置
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *Org1
+

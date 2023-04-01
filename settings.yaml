@@ -1,0 +1,34 @@
+mysql:
+  host: 192.168.0.105
+  port: 3306
+  db: gvf_db
+  user: jiangzhan
+  password: 654884102
+  log_level: dev
+#  config: charset=utf8mb4&parseTime=True&loc=Local
+#  max-idle-conns: 10
+#  max-open-conns: 100
+logger:
+  level: info  #warning
+  prefix: '[gvf]'
+  director: log
+  show_line: true
+  log_in_console: true
+system:
+  host: "0.0.0.0"
+  port: 8080
+  env: release #dev
+jwt:
+  secret: xxxx
+  expires: 2
+  issuer: "1234"
+qq:
+  app-id: "xxx"
+  key: xx
+  redirect: http://xx.xx.com/login?flag=qq
+email:
+  host: smtp.qq.com
+  port: 465
+  user: xxx@qq.com
+path:
+  filepath: "files"

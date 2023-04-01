@@ -1,0 +1,25 @@
+
+# ---------------------------------------------------------------------------
+# "OrdererOrgs" - Definition of organizations managing orderer nodes
+# ---------------------------------------------------------------------------
+OrdererOrgs:
+  # ---------------------------------------------------------------------------
+  # Orderer
+  # ---------------------------------------------------------------------------
+  - Name: Orderer
+    Domain: example.com
+
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+
+  - Name: Org1
+    Domain: org1.example.com
+    EnableNodeOUs: false   #是否根据证书中的OU字段来判断访问者的角色
+    Template:
+      Count: 2
+    Users:
+      Count: 1
+
+
