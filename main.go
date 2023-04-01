@@ -7,6 +7,7 @@ import (
 	"gvf_server/global"
 	"gvf_server/routers"
 	"gvf_server/sdkInit"
+	"gvf_server/service"
 	"os"
 )
 
@@ -44,7 +45,7 @@ func main() {
 		ChaincodeID:     SimpleCC,
 		ChaincodeGoPath: os.Getenv("GOPATH"),
 		ChaincodePath:   "gvf_project/gvf_server/chaincode/",
-		UserName:        "User1",
+		UserName:        "Admin",
 	}
 
 	sdk, err := sdkInit.SetupSDK(configFile, initialized)
@@ -66,6 +67,25 @@ func main() {
 		return
 	}
 	fmt.Println(channelClient)
+
+	serviceSetup := service.ServiceSetup{
+		ChaincodeID: SimpleCC,
+		Client:      channelClient,
+	}
+
+	msg, err := serviceSetup.SetInfo("1", "123456")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(msg)
+	}
+
+	msg, err = serviceSetup.GetInfo("1")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(msg)
+	}
 
 	router := routers.InitRouter()
 	addr := global.Config.System.Addrr()

@@ -4,13 +4,13 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 )
 
-func (t *ServiceSetup) SetInfo(id, dataHash string) (string, error) {
+func (t *ServiceSetup) SetInfo(name, num string) (string, error) {
 
-	eventID := "eventStoreDataHash"
+	eventID := "eventstoreDataHash"
 	reg, notifier := regitserEvent(t.Client, t.ChaincodeID, eventID)
 	defer t.Client.UnregisterChaincodeEvent(reg)
 
-	req := channel.Request{ChaincodeID: t.ChaincodeID, Fcn: "storeDataHash", Args: [][]byte{[]byte(id), []byte(dataHash), []byte(eventID)}}
+	req := channel.Request{ChaincodeID: t.ChaincodeID, Fcn: "storeDataHash", Args: [][]byte{[]byte(name), []byte(num)}}
 	respone, err := t.Client.Execute(req)
 	if err != nil {
 		return "", err
@@ -22,4 +22,15 @@ func (t *ServiceSetup) SetInfo(id, dataHash string) (string, error) {
 	}
 
 	return string(respone.TransactionID), nil
+}
+
+func (t *ServiceSetup) GetInfo(name string) (string, error) {
+
+	req := channel.Request{ChaincodeID: t.ChaincodeID, Fcn: "queryDataHash", Args: [][]byte{[]byte(name)}}
+	respone, err := t.Client.Query(req)
+	if err != nil {
+		return "", err
+	}
+
+	return string(respone.Payload), nil
 }

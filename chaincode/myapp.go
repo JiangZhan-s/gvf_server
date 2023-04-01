@@ -100,8 +100,8 @@ func (t *SimpleChaincode) updateDataHash(stub shim.ChaincodeStubInterface, args 
 
 // 将数据哈希值存储到链上
 func (t *SimpleChaincode) storeDataHash(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) != 2 {
-		return shim.Error("Incorrect number of arguments. Expecting 2")
+	if len(args) != 3 {
+		return shim.Error("Incorrect number of arguments. Expecting 3")
 	}
 	id := args[0]
 	dataHash := args[1]

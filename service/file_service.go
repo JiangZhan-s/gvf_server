@@ -12,7 +12,7 @@ import (
 )
 
 // CreateFile 添加文件数据
-func CreateFile(fileName string, fileSize int64, fId string, fileStoreId int, userID int) {
+func CreateFile(fileName string, fileSize int64, fId string, fileStoreId int, userID int) string {
 	var sizeStr string
 	//获取文件后缀
 	fileSuffix := path.Ext(fileName)
@@ -43,8 +43,9 @@ func CreateFile(fileName string, fileSize int64, fId string, fileStoreId int, us
 	if err := global.DB.Create(&myFile).Error; err != nil {
 		// 如果保存出错，输出错误信息并退出函数
 		fmt.Println("failed to create file:", err)
-		return
+		return ""
 	}
+	return string(myFile.ID)
 
 }
 
