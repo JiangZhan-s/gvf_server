@@ -13,7 +13,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 )
 
-const ChaincodeVersion = "1.0"
+const ChaincodeVersion = "3.0"
 
 func SetupSDK(ConfigFile string, initialized bool) (*fabsdk.FabricSDK, error) {
 

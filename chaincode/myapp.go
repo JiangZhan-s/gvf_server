@@ -118,6 +118,11 @@ func (t *SimpleChaincode) storeDataHash(stub shim.ChaincodeStubInterface, args [
 		return shim.Error(err.Error())
 	}
 
+	err = stub.SetEvent(args[2], []byte{})
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
 	return shim.Success(nil)
 
 }

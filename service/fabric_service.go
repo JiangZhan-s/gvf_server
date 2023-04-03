@@ -10,7 +10,7 @@ func (t *ServiceSetup) SetInfo(name, num string) (string, error) {
 	reg, notifier := regitserEvent(t.Client, t.ChaincodeID, eventID)
 	defer t.Client.UnregisterChaincodeEvent(reg)
 
-	req := channel.Request{ChaincodeID: t.ChaincodeID, Fcn: "storeDataHash", Args: [][]byte{[]byte(name), []byte(num)}}
+	req := channel.Request{ChaincodeID: t.ChaincodeID, Fcn: "storeDataHash", Args: [][]byte{[]byte(name), []byte(num), []byte(eventID)}}
 	respone, err := t.Client.Execute(req)
 	if err != nil {
 		return "", err
