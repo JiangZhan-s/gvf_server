@@ -1,11 +1,10 @@
 package routers
 
 import (
-	"github.com/gin-gonic/gin"
 	"gvf_server/api"
 )
 
-func UserRouter(router *gin.Engine) {
+func (router RouterGroup) UserRouter() {
 	app := api.ApiGroupApp.UserApi
 	router.POST("email_login", app.EmailLoginView)
 }

@@ -31,7 +31,7 @@ Organizations:
                 Rule: "OR('Org1MSP.admin','Org1MSP.peer','Org1MSP.client','Org1MSP.member')" #满足Org1组织admin,peer,client中任意成员的签名，这里可以解释为Org1组织内非orderer角色的任意成员签名
             Writers:
                 Type: Signature
-                Rule: "OR('Org1MSP.admin','Org1MSP.client','Org1MSP.member')" #满足Org1组织admin，client中任意成员签名
+                Rule: "OR('Org1MSP.admin','Org1MSP.peer','Org1MSP.client','Org1MSP.member')" #满足Org1组织admin，client中任意成员签名
             Admins:
                 Type: Signature
                 Rule: "OR('Org1MSP.admin')" #满足Org1组织任意admin成员的签名
@@ -103,10 +103,10 @@ Channel: &ChannelDefaults  #通道默认配置，在下面Porfile处被调用
     Policies:
         Readers:
             Type: Signature
-            Rule: "OR('Org1MSP.member', 'Org2MSP.member')"
+            Rule: "OR('Org1MSP.member')"
         Writers:
             Type: Signature
-            Rule: "OR('Org1MSP.member', 'Org2MSP.member')"
+            Rule: "OR('Org1MSP.member')"
         Admins:
             Type: ImplicitMeta
             Rule: "MAJORITY Admins"

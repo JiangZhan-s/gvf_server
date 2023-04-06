@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"gvf_server/config"
 	"gvf_server/core"
 	"gvf_server/flag"
 	"gvf_server/global"
 	"gvf_server/routers"
 	"gvf_server/sdkInit"
-	"gvf_server/service"
 	"os"
 )
 
@@ -61,26 +61,26 @@ func main() {
 		fmt.Println(err.Error())
 		return
 	}
-	channelClient, err := sdkInit.InstallAndInstantiateCC(sdk, initInfo)
+	global.ChannelClient, err = sdkInit.InstallAndInstantiateCC(sdk, initInfo)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	fmt.Println(channelClient)
+	fmt.Println(global.ChannelClient)
 
-	serviceSetup := service.ServiceSetup{
+	global.ServiceSetup = config.ServiceSetup{
 		ChaincodeID: SimpleCC,
-		Client:      channelClient,
+		Client:      global.ChannelClient,
 	}
 
-	msg, err := serviceSetup.SetInfo("1", "123456")
+	msg, err := global.ServiceSetup.SetInfo("1", "123456")
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(msg)
 	}
 
-	msg, err = serviceSetup.GetInfo("1")
+	msg, err = global.ServiceSetup.GetInfo("1")
 	if err != nil {
 		fmt.Println(err)
 	} else {

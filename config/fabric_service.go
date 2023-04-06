@@ -1,4 +1,4 @@
-package service
+package config
 
 import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"

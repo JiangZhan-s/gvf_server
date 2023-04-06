@@ -1,7 +1,6 @@
 package user_api
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"gvf_server/global"
 	"gvf_server/models"
@@ -26,7 +25,6 @@ func (UserApi) EmailLoginView(c *gin.Context) {
 
 	var userModel models.UserModel
 	err = global.DB.Take(&userModel, "user_name= ? or email= ?", cr.UserName, cr.UserName).Error
-	fmt.Println(err)
 	if err != nil {
 		global.Log.Warn("用户名不存在")
 		res.FailWithMessage("用户名或密码错误", c)

@@ -5,12 +5,18 @@ import (
 	"gvf_server/global"
 )
 
+type RouterGroup struct {
+	*gin.RouterGroup
+}
+
 func InitRouter() *gin.Engine {
 	gin.SetMode(global.Config.System.Env)
 	router := gin.Default()
+	apiRouterGroup := router.Group("api")
+	routerGroupApp := RouterGroup{apiRouterGroup}
 	//系统配置api
-	SettingsRouter(router)
-	UserRouter(router)
-	FileRouter(router)
+	routerGroupApp.SettingsRouter()
+	routerGroupApp.UserRouter()
+	routerGroupApp.FileRouter()
 	return router
 }

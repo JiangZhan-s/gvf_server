@@ -67,12 +67,25 @@ func (FileApi) FileUploadView(c *gin.Context) {
 
 	//将光标移至开头
 	_, _ = newFile.Seek(0, 0)
-	utils.GetSHA256HashCode(newFile)
+	hashData := utils.GetSHA256HashCode(newFile)
 
 	//新建文件信息
-	service.CreateFile(head.Filename, fileSize, Fid, user.FileStoreID, int(user.ID))
+	fileID := service.CreateFile(head.Filename, fileSize, Fid, user.FileStoreID, int(user.ID))
 	//上传成功减去相应剩余容量
 	service.SubtractSize(fileSize, user.FileStoreID)
+	msg, err := global.ServiceSetup.SetInfo(fileID, hashData)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(msg)
+	}
+
+	msg, err = global.ServiceSetup.GetInfo(fileID)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(msg)
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 200,
