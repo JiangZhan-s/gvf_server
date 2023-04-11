@@ -33,7 +33,6 @@ func CapacityIsEnough(fileSize int64, userId int) bool {
 	if err != nil {
 		return false
 	}
-
-	remainingSize := fileStore.MaxSize - fileStore.CurrentSize - fileSize
+	remainingSize := fileStore.MaxSize - fileStore.CurrentSize - fileSize/1024
 	return remainingSize >= 0
 }

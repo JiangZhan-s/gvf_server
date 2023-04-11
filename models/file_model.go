@@ -20,3 +20,7 @@ type FileModel struct {
 	FileStoreModel FileStoreModel `gorm:"foreignKey:FileStoreID" json:"file_store"` // 添加外键关联到FileStoreModel
 	Content        []byte         `json:"content"`
 }
+
+type Data struct {
+	DataHash string `json:"DataHash"`
+}

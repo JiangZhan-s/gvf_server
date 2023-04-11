@@ -2,8 +2,10 @@ package service
 
 import (
 	"fmt"
+	"gorm.io/gorm"
 	"gvf_server/global"
 	"gvf_server/models"
+	"gvf_server/service/common"
 	"gvf_server/utils"
 	"path"
 	"strconv"
@@ -13,17 +15,18 @@ import (
 
 // CreateFile 添加文件数据
 func CreateFile(fileName string, fileSize int64, fId string, fileStoreId int, userID int) string {
-	var sizeStr string
+
 	//获取文件后缀
 	fileSuffix := path.Ext(fileName)
 	//获取文件名
 	filePrefix := fileName[0 : len(fileName)-len(fileSuffix)]
 	fid, _ := strconv.Atoi(fId)
-
+	//计算文件大小，并根据文件大小生成文件大小字符串
+	var sizeStr string
 	if fileSize < 1048576 {
-		sizeStr = strconv.FormatInt(fileSize/1024, 10) + "KB"
+		sizeStr = fmt.Sprintf("%dKB", fileSize/1024)
 	} else {
-		sizeStr = strconv.FormatInt(fileSize/102400, 10) + "MB"
+		sizeStr = fmt.Sprintf("%dMB", fileSize/102400)
 	}
 
 	myFile := models.FileModel{
@@ -45,7 +48,7 @@ func CreateFile(fileName string, fileSize int64, fId string, fileStoreId int, us
 		fmt.Println("failed to create file:", err)
 		return ""
 	}
-	return string(myFile.ID)
+	return fmt.Sprintf("%d", myFile.ID)
 
 }
 
@@ -55,12 +58,17 @@ func GetUserFile(parentId string, storeId int) (files []models.FileModel) {
 	return
 }
 
+// GetUserFileAll 获取用户的文件
+func GetUserFileAll(storeId int, cr models.PageInfo) (files []models.FileModel, count int64, err error) {
+	searchCond := "file_store_id = ?"
+	searchValues := []interface{}{storeId}
+	files, count, err = common.ComList(models.FileModel{}, common.Option{PageInfo: cr}, searchCond, searchValues...)
+	return files, count, err
+}
+
 // SubtractSize 文件上传成功减去相应容量
 func SubtractSize(size int64, fileStoreId int) {
-	var fileStore models.FileStoreModel
-	fileStore.CurrentSize = fileStore.CurrentSize + size/1024
-	fmt.Println(fileStore.CurrentSize)
-	global.DB.Save(&fileStore)
+	global.DB.Model(&models.FileStoreModel{}).Where("id = ?", fileStoreId).UpdateColumn("current_size", gorm.Expr("current_size + ?", size/1024))
 }
 
 // GetUserFileCount 获取用户文件数量
@@ -109,19 +117,18 @@ func GetTypeFile(fileType, fileStoreId int) (files []models.FileModel) {
 }
 
 // CurrFileExists 判断当前文件夹是否有同名文件
-func CurrFileExists(fId, filename string) bool {
-	var file models.FileModel
+func CurrFileExists(folderID, filename string) bool {
+	var count int64
 	//获取文件后缀
 	fileSuffix := strings.ToLower(path.Ext(filename))
 	//获取文件名
 	filePrefix := filename[0 : len(filename)-len(fileSuffix)]
 
-	global.DB.Find(&file, "parent_folder_id = ? and file_name = ? and postfix = ?", fId, filePrefix, fileSuffix)
-
-	if file.Size > 0 {
-		return false
+	global.DB.Model(&models.FileModel{}).Where("parent_folder_id = ? AND file_name = ? AND postfix = ?", folderID, filePrefix, fileSuffix).Count(&count)
+	if count > 0 {
+		return true
 	}
-	return true
+	return false
 }
 
 // GetFileInfo 通过fileId获取文件信息
@@ -131,9 +138,9 @@ func GetFileInfo(fId string) (file models.FileModel) {
 }
 
 // DownloadNumAdd 文件下载次数+1
-func DownloadNumAdd(fId string) {
+func DownloadNumAdd(fileId string) {
 	var file models.FileModel
-	global.DB.First(&file, fId)
+	global.DB.First(&file, fileId)
 	file.DownloadNum = file.DownloadNum + 1
 	global.DB.Save(&file)
 }

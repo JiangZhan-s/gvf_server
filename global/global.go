@@ -4,6 +4,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"gvf_server/config"
 )
 
@@ -14,4 +15,5 @@ var (
 	Path          string
 	ServiceSetup  config.ServiceSetup
 	ChannelClient *channel.Client
+	MysqlLog      logger.Interface
 )

@@ -1,6 +1,9 @@
 package utils
 
-import "strings"
+import (
+	"strings"
+	"unicode"
+)
 
 // GetFileTypeInt 判断文件后缀获取类型id
 func GetFileTypeInt(filePrefix string) int {
@@ -19,4 +22,13 @@ func GetFileTypeInt(filePrefix string) int {
 	}
 
 	return 5
+}
+
+func IsASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] > unicode.MaxASCII {
+			return false
+		}
+	}
+	return true
 }
