@@ -18,3 +18,13 @@ func CreateFolderRoot(fileStoreId int, userName string) (*models.FileFolderModel
 	}
 	return &fileFolder, nil
 }
+
+// FindFolderRoot 查询用户根目录
+// 根据用户所对应的仓库id查询用户的根目录(根目录的父id为0)
+func FindFolderRoot(fileStoreId int) (int, error) {
+	result := -1
+	if err := global.DB.Model(&models.FileFolderModel{}).Select("id").Where("file_store_id=? and parent_folder_id=?", fileStoreId, 0).Scan(&result).Error; err != nil {
+		return result, err
+	}
+	return result, nil
+}

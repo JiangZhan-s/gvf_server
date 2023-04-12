@@ -1,0 +1,33 @@
+ export FABRIC_TAG=1.4.7
+ export CA_TAG=1.4.7
+ export THIRDPARTY_IMAGE_VERSION=0.4.18
+ 
+ docker pull hyperledger/fabric-peer:$FABRIC_TAG \
+&& docker pull hyperledger/fabric-orderer:$FABRIC_TAG \
+&& docker pull hyperledger/fabric-ca:$CA_TAG \
+&& docker pull hyperledger/fabric-tools:$FABRIC_TAG \
+&& docker pull hyperledger/fabric-ccenv:$FABRIC_TAG \
+&& docker pull hyperledger/fabric-baseimage:$THIRDPARTY_IMAGE_VERSION \
+&& docker pull hyperledger/fabric-baseos:$THIRDPARTY_IMAGE_VERSION \
+&& docker pull hyperledger/fabric-couchdb:$THIRDPARTY_IMAGE_VERSION \
+&& docker pull hyperledger/fabric-kafka:$THIRDPARTY_IMAGE_VERSION \
+&& docker pull hyperledger/fabric-zookeeper:$THIRDPARTY_IMAGE_VERSION
+
+
+
+ docker tag hyperledger/fabric-peer:$FABRIC_TAG hyperledger/fabric-peer \
+&& docker tag hyperledger/fabric-orderer:$FABRIC_TAG hyperledger/fabric-orderer \
+&& docker tag hyperledger/fabric-ca:$CA_TAG hyperledger/fabric-ca \
+&& docker tag hyperledger/fabric-tools:$FABRIC_TAG hyperledger/fabric-tools \
+&& docker tag hyperledger/fabric-ccenv:$FABRIC_TAG hyperledger/fabric-ccenv \
+&& docker tag hyperledger/fabric-baseimage:$THIRDPARTY_IMAGE_VERSION hyperledger/fabric-baseimage \
+&& docker tag hyperledger/fabric-baseos:$THIRDPARTY_IMAGE_VERSION hyperledger/fabric-baseos \
+&& docker tag hyperledger/fabric-couchdb:$THIRDPARTY_IMAGE_VERSION hyperledger/fabric-couchdb \
+&& docker tag hyperledger/fabric-kafka:$THIRDPARTY_IMAGE_VERSION hyperledger/fabric-kafka \
+&& docker tag hyperledger/fabric-zookeeper:$THIRDPARTY_IMAGE_VERSION hyperledger/fabric-zookeeper
+
+
+ git clone -b v1.4.7 https://github.com/hyperledger/fabric-ca.git
+
+git clone -b v1.4.7 https://github.com/hyperledger/fabric.git
+
