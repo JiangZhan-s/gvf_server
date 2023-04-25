@@ -18,9 +18,13 @@ type FileModel struct {
 	Type           int            `json:"type'"`                                    //文件类型
 	Postfix        string         `json:"postfix"`                                  //文件后缀
 	FileStoreModel FileStoreModel `gorm:"foreignKey:FileStoreID" json:"file_store"` // 添加外键关联到FileStoreModel
-	Content        []byte         `json:"content"`
 }
 
 type Data struct {
 	DataHash string `json:"DataHash"`
+}
+
+type Share struct {
+	OwnerId   string `json:"OwnerId"`
+	ShareCode string `json:"ShareCode"`
 }

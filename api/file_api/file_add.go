@@ -23,7 +23,8 @@ func (FileApi) FileUploadView(c *gin.Context) {
 		res.FailWithMessage(fmt.Sprintf("未找到用户:%d", userID), c)
 		return
 	}
-	folderID := c.GetHeader("id")
+	fmt.Println(userID)
+	folderID := c.GetHeader("folder_id")
 	fmt.Println(folderID)
 	//接收上传文件
 	file, header, err := c.Request.FormFile("file")
@@ -40,12 +41,12 @@ func (FileApi) FileUploadView(c *gin.Context) {
 	}
 
 	//判断用户的容量是否足够
-	if !service.CapacityIsEnough(header.Size, user.FileStoreID) {
+	if !service.CapacityIsEnough(header.Size, int(user.ID)) {
 		res.FailWithMessage("用户容量不足", c)
 		return
 	}
 
-	newFile, err := os.Create(global.Path + "/" + header.Filename)
+	newFile, err := os.Create(global.Path + "/" + user.UserName + "/" + header.Filename)
 	if err != nil {
 		res.FailWithMessage("文件创建失败", c)
 		return
@@ -68,18 +69,18 @@ func (FileApi) FileUploadView(c *gin.Context) {
 	hashData := utils.GetSHA256HashCode(newFile)
 	fmt.Println(hashData)
 	//新建文件信息
-	fileID := service.CreateFile(header.Filename, fileSize, folderID, user.FileStoreID, int(user.ID))
+	fileID := service.CreateFile("/"+user.UserName, header.Filename, fileSize, folderID, user.FileStoreID, int(user.ID))
 	fmt.Println(fileID)
 	//上传成功减去相应剩余容量
 	service.SubtractSize(fileSize, user.FileStoreID)
-	msg, err := global.ServiceSetup.SetInfo(fileID, hashData)
+	msg, err := global.ServiceSetup.StoreDataHash(fileID, hashData)
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(msg)
 	}
 
-	msg, err = global.ServiceSetup.GetInfo(fileID)
+	msg, err = global.ServiceSetup.QueryDataHash(fileID)
 	if err != nil {
 		fmt.Println(err)
 	} else {

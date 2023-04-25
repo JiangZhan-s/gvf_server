@@ -73,14 +73,14 @@ func main() {
 		Client:      global.ChannelClient,
 	}
 
-	msg, err := global.ServiceSetup.SetInfo("1", "123456")
+	msg, err := global.ServiceSetup.StoreDataHash("1", "123456")
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(msg)
 	}
 
-	msg, err = global.ServiceSetup.GetInfo("1")
+	msg, err = global.ServiceSetup.QueryDataHash("1")
 	if err != nil {
 		fmt.Println(err)
 	} else {

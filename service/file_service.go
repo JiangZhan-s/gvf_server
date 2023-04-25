@@ -14,7 +14,7 @@ import (
 )
 
 // CreateFile 添加文件数据
-func CreateFile(fileName string, fileSize int64, fId string, fileStoreId int, userID int) string {
+func CreateFile(filePath string, fileName string, fileSize int64, fId string, fileStoreId int, userID int) string {
 
 	//获取文件后缀
 	fileSuffix := path.Ext(fileName)
@@ -32,7 +32,7 @@ func CreateFile(fileName string, fileSize int64, fId string, fileStoreId int, us
 	myFile := models.FileModel{
 		FileName:       filePrefix,
 		FileStoreID:    fileStoreId,
-		FilePath:       "",
+		FilePath:       filePath,
 		UserID:         userID,
 		DownloadNum:    0,
 		UploadTime:     time.Now().Format("2006-01-02 15:04:05"),

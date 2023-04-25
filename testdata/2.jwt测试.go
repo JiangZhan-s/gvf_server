@@ -13,7 +13,6 @@ func main() {
 	token, err := jwts.GenToken(jwts.JwtPayLoad{
 		UserID:   1,
 		Role:     1,
-		UserName: "jiangzhan",
 		NickName: "xxx",
 	})
 	fmt.Println(token, err)

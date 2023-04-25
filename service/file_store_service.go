@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"gvf_server/global"
 	"gvf_server/models"
 )
@@ -34,5 +35,6 @@ func CapacityIsEnough(fileSize int64, userId int) bool {
 		return false
 	}
 	remainingSize := fileStore.MaxSize - fileStore.CurrentSize - fileSize/1024
+	fmt.Println(fileStore.MaxSize, fileStore.CurrentSize, fileSize/1024, remainingSize)
 	return remainingSize >= 0
 }

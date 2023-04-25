@@ -30,10 +30,13 @@ func (FileApi) FileDownloadByIdView(c *gin.Context) {
 	fileId := c.GetHeader("file_id")
 	fileModel := models.FileModel{}
 	fileModel = service.GetFileInfo(fileId)
-	fmt.Println(fmt.Sprintf(global.Path + "/" + fileModel.FileName + fileModel.Postfix))
-	file, err := os.Open(global.Path + "/" + fileModel.FileName + fileModel.Postfix)
+	filePath := path.Join(global.Path, fileModel.FilePath, fileModel.FileName+fileModel.Postfix)
+	fileName := fileModel.FileName + fileModel.Postfix
+	fmt.Println(filePath)
+	file, err := os.Open(filePath)
 	if err != nil {
 		fmt.Println("文件打开失败:", err)
+		c.Status(500)
 		return
 	}
 	defer file.Close()
@@ -42,7 +45,7 @@ func (FileApi) FileDownloadByIdView(c *gin.Context) {
 	hashData := utils.GetSHA256HashCode(file)
 	fmt.Println(hashData)
 	//对比链上连下数据哈希是否相等
-	msg, err := global.ServiceSetup.GetInfo(fileId)
+	msg, err := global.ServiceSetup.QueryDataHash(fileId)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -61,10 +64,8 @@ func (FileApi) FileDownloadByIdView(c *gin.Context) {
 		return
 	}
 	fmt.Println(msg)
-	// 将文件作为附件返回r给客户端进行下载
-	filePath := path.Join(global.Path, fileModel.FileName+fileModel.Postfix)
-	fileName := fileModel.FileName + fileModel.Postfix
-	// 调用函数传输文件
+	//将文件作为附件返回r给客户端进行下载
+	//调用函数传输文件
 	c.FileAttachment(filePath, fileName)
 
 	// 更新下载次数

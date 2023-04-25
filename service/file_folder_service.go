@@ -3,6 +3,8 @@ package service
 import (
 	"gvf_server/global"
 	"gvf_server/models"
+	"os"
+	"path/filepath"
 )
 
 // CreateFolderRoot 创建用户根目录
@@ -15,6 +17,11 @@ func CreateFolderRoot(fileStoreId int, userName string) (*models.FileFolderModel
 	}
 	if err := global.DB.Create(&fileFolder).Error; err != nil {
 		return nil, err
+	}
+	folderPath := filepath.Join(global.Path, userName)
+	err := os.Mkdir(folderPath, 0755)
+	if err != nil {
+		panic(err)
 	}
 	return &fileFolder, nil
 }
