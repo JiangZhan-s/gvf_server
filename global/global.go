@@ -1,6 +1,7 @@
 package global
 
 import (
+	"github.com/go-redis/redis/v8"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -16,4 +17,5 @@ var (
 	ServiceSetup  config.ServiceSetup
 	ChannelClient *channel.Client
 	MysqlLog      logger.Interface
+	Redis         *redis.Client
 )

@@ -23,7 +23,7 @@ jwt:
   expires: 2
   issuer: "1234"
 qq:
-  app-id: "xxx"
+  app-id: 102047073
   key: xx
   redirect: http://xx.xx.com/login?flag=qq
 email:
@@ -32,3 +32,8 @@ email:
   user: xxx@qq.com
 path:
   filepath: "files"
+redis:
+  ip: 192.168.0.1
+  port: 6379
+  password: "redis"
+  pool_size: 100

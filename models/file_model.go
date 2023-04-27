@@ -18,6 +18,7 @@ type FileModel struct {
 	Type           int            `json:"type'"`                                    //文件类型
 	Postfix        string         `json:"postfix"`                                  //文件后缀
 	FileStoreModel FileStoreModel `gorm:"foreignKey:FileStoreID" json:"file_store"` // 添加外键关联到FileStoreModel
+	ShareFlag      int            `json:"share_flag"`
 }
 
 type Data struct {

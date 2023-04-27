@@ -11,7 +11,7 @@ import (
 	"gvf_server/utils/jwts"
 )
 
-func (ShareApi) AddShareCode(c *gin.Context) {
+func (ShareApi) AddShareCodeView(c *gin.Context) {
 	_claims, _ := c.Get("claims")
 	claims := _claims.(*jwts.CustomClaims)
 	userID := claims.UserID
@@ -27,15 +27,15 @@ func (ShareApi) AddShareCode(c *gin.Context) {
 	fileId := c.GetHeader("file_id")
 	fileModel := service.GetFileInfo(fileId)
 
-	msg, err := global.ServiceSetup.QueryShareCode(fileId)
-	if err != nil {
+	//msg, err := global.ServiceSetup.QueryShareCode(fileId)
+	//if err != nil {
+	//
+	//} else {
+	//	res.FailWithMessage("wenjian yijing fenxiang ", c)
+	//	return
+	//}
 
-	} else {
-		res.FailWithMessage("wenjian yijing fenxiang ", c)
-		return
-	}
-
-	msg, err = global.ServiceSetup.StoreShareCode(fileId, fileModel.FileName, string(user.ID))
+	msg, err := global.ServiceSetup.StoreShareCode(fileId, fileModel.FileName, string(user.ID))
 	if err != nil {
 		fmt.Println(err)
 	} else {
@@ -56,5 +56,6 @@ func (ShareApi) AddShareCode(c *gin.Context) {
 		panic(err)
 	}
 	fmt.Println(d)
+	service.ShareFileUp(fileId)
 	res.OkWithData(d.ShareCode, c)
 }

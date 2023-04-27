@@ -24,6 +24,8 @@ func main() {
 	global.Log = core.InitLogger()
 	//连接数据库
 	global.DB = core.InitGorm()
+	//连接redis
+	global.Redis = core.ConnectRedis()
 	global.Path = core.InitPath()
 	global.Log.Infof("文件根目录路径为:%s", global.Path)
 	//命令行参数绑定

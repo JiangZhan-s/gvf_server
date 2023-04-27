@@ -41,6 +41,7 @@ func CreateFile(filePath string, fileName string, fileSize int64, fId string, fi
 		SizeStr:        sizeStr,
 		Type:           utils.GetFileTypeInt(fileSuffix),
 		Postfix:        strings.ToLower(fileSuffix),
+		ShareFlag:      0,
 	}
 	// 将 myFile 保存到数据库中
 	if err := global.DB.Create(&myFile).Error; err != nil {
@@ -148,4 +149,20 @@ func DownloadNumAdd(fileId string) {
 // DeleteUserFile 删除数据库文件数据
 func DeleteUserFile(fId, folderId string, storeId int) {
 	global.DB.Where("id = ? and file_store_id = ? and parent_folder_id = ?", fId, storeId, folderId).Delete(models.FileModel{})
+}
+
+// ShareFileUp 分享标志为1
+func ShareFileUp(fileId string) {
+	var file models.FileModel
+	global.DB.First(&file, fileId)
+	file.ShareFlag = 1
+	global.DB.Save(&file)
+}
+
+// GetUserShareAll 获取用户的分享文件
+func GetUserShareAll(storeId int, cr models.PageInfo) (files []models.FileModel, count int64, err error) {
+	searchCond := "file_store_id = ? and share_flag=1"
+	searchValues := []interface{}{storeId}
+	files, count, err = common.ComList(models.FileModel{}, common.Option{PageInfo: cr}, searchCond, searchValues...)
+	return files, count, err
 }
