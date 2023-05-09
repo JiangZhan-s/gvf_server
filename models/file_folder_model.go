@@ -9,6 +9,6 @@ type FileFolderModel struct {
 	ParentFolderID int            `json:"parent_folder_id"` //父文件夹ID
 	FileStoreID    int            `json:"file_store_id"`    //文件所属仓库ID
 	Time           string         `json:"time"`             //时间
-	FileStoreModel FileStoreModel `gorm:"foreignKey:FileStoreID" json:"file_store"`
+	FileStoreModel FileStoreModel `gorm:"foreignKey:FileStoreID; constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT;" json:"file_store"`
 	FilesModel     []FileModel    `gorm:"foreignKey:ParentFolderID" json:"file_model"`
 }

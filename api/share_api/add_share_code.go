@@ -9,6 +9,7 @@ import (
 	"gvf_server/models/res"
 	"gvf_server/service"
 	"gvf_server/utils/jwts"
+	"strconv"
 )
 
 func (ShareApi) AddShareCodeView(c *gin.Context) {
@@ -56,6 +57,12 @@ func (ShareApi) AddShareCodeView(c *gin.Context) {
 		panic(err)
 	}
 	fmt.Println(d)
+	//分享标志置为1
 	service.ShareFileUp(fileId)
-	res.OkWithData(d.ShareCode, c)
+	//更新分享表
+	fmt.Println(userID)
+	fmt.Println(strconv.Itoa(int(userID)))
+	hash := service.CreateShare(fileId, strconv.Itoa(int(userID)))
+	data := "分享查询码是" + hash + "；分享提取码是" + d.ShareCode + "。"
+	res.OkWithData(data, c)
 }

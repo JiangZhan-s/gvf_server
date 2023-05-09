@@ -16,6 +16,7 @@ func MakeMigrations() {
 			&models.FileModel{},
 			&models.FileFolderModel{},
 			&models.FileStoreModel{},
+			&models.ShareModel{},
 		)
 	if err != nil {
 		global.Log.Error("[ error ] 生成数据库表结构失败")

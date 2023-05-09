@@ -3,4 +3,8 @@ echo "stop all docker"
 docker rm $(docker ps -aq)
 docker container stop $(docker container ls -aq)
 
-docker volume prune
+docker volume prune -f
+
+docker-compose down
+
+docker-compose up
