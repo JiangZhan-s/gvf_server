@@ -10,6 +10,7 @@ import (
 	"gvf_server/service"
 	"gvf_server/utils/jwts"
 	"strconv"
+	"time"
 )
 
 func (ShareApi) AddShareCodeView(c *gin.Context) {
@@ -35,19 +36,17 @@ func (ShareApi) AddShareCodeView(c *gin.Context) {
 	//	res.FailWithMessage("wenjian yijing fenxiang ", c)
 	//	return
 	//}
-
-	msg, err := global.ServiceSetup.StoreShareCode(fileId, fileModel.FileName, string(user.ID))
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(msg)
-	}
-
-	msg, err = global.ServiceSetup.QueryShareCode(fileId)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println("搜索到的区块连值为：", msg)
+	var msg string
+	maxRetry := 5 // 设置最大重试次数
+	for i := 0; i < maxRetry; i++ {
+		msg, err = global.ServiceSetup.StoreShareCode(fileId, fileModel.FileName, string(user.ID))
+		if err != nil {
+			fmt.Printf("Error: %s, retrying...\n", err.Error())
+		} else {
+			fmt.Println(msg)
+			break // 成功获取到结果，跳出循环
+		}
+		time.Sleep(1 * time.Second) // 暂停1秒后重试
 	}
 
 	//解析json数据

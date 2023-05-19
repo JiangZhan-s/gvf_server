@@ -60,9 +60,9 @@ func GetUserFile(parentId string, storeId int) (files []models.FileModel) {
 }
 
 // GetUserFileAll 获取用户的文件
-func GetUserFileAll(storeId int, cr models.PageInfo) (files []models.FileModel, count int64, err error) {
-	searchCond := "file_store_id = ?"
-	searchValues := []interface{}{storeId}
+func GetUserFileAll(storeId int, cr models.PageInfo, parentFolderId string) (files []models.FileModel, count int64, err error) {
+	searchCond := "file_store_id = ? and parent_folder_id = ?"
+	searchValues := []interface{}{storeId, parentFolderId}
 	files, count, err = common.ComList(models.FileModel{}, common.Option{PageInfo: cr}, searchCond, searchValues...)
 	return files, count, err
 }
@@ -100,10 +100,10 @@ func GetFileDetailUse(fileStoreId int) map[string]int64 {
 	fileDetailUseMap["imgCount"] = imgCount
 	//视频类型
 	videoCount = global.DB.Find(&files, "file_store_id = ? and type = ?", fileStoreId, 3).RowsAffected
-	fileDetailUseMap["videoCount"] = videoCount
+	fileDetailUseMap["musicCount"] = videoCount
 	//音乐类型
 	musicCount = global.DB.Find(&files, "file_store_id = ? and type = ?", fileStoreId, 4).RowsAffected
-	fileDetailUseMap["musicCount"] = musicCount
+	fileDetailUseMap["videoCount"] = musicCount
 	//其他类型
 	otherCount = global.DB.Find(&files, "file_store_id = ? and type = ?", fileStoreId, 5).RowsAffected
 	fileDetailUseMap["otherCount"] = otherCount

@@ -20,5 +20,7 @@ func InitRouter() *gin.Engine {
 	routerGroupApp.FileRouter()
 	routerGroupApp.FileFolderRouter()
 	routerGroupApp.ShareRouter()
+	routerGroupApp.FileStoreRouter()
+	routerGroupApp.RoleRouter()
 	return router
 }

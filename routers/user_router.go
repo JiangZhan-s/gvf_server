@@ -10,4 +10,5 @@ func (router RouterGroup) UserRouter() {
 	router.POST("email_login", app.EmailLoginView)
 	router.POST("logout", middleware.JwtAuth(), app.LogoutView)
 	router.GET("get_nickname_by_id", app.UserNickQueryByIdView)
+	router.GET("query_user_all", middleware.JwtAuth(), app.UserQueryAllView)
 }

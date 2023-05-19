@@ -9,6 +9,7 @@ import (
 	"gvf_server/models/res"
 	"gvf_server/service"
 	"gvf_server/utils/jwts"
+	"time"
 )
 
 // ShareQueryByIdView 根据文件id在区块连中搜索提取码
@@ -27,11 +28,17 @@ func (ShareApi) ShareQueryByIdView(c *gin.Context) {
 
 	fileId := c.GetHeader("file_id")
 
-	msg, err := global.ServiceSetup.QueryShareCode(fileId)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println("搜索到的区块连值为：", msg)
+	var msg string
+	maxRetry := 5 // 设置最大重试次数
+	for i := 0; i < maxRetry; i++ {
+		msg, err = global.ServiceSetup.QueryShareCode(fileId)
+		if err != nil {
+			fmt.Printf("Error: %s, retrying...\n", err.Error())
+		} else {
+			fmt.Println(msg)
+			break // 成功获取到结果，跳出循环
+		}
+		time.Sleep(1 * time.Second) // 暂停1秒后重试
 	}
 
 	//解析json数据
@@ -71,11 +78,18 @@ func (ShareApi) FileInfoQueryByCode(c *gin.Context) {
 	fileId := c.GetHeader("file_id")
 
 	//获取区块链中的hashcode
-	msg, err := global.ServiceSetup.QueryShareCode(fileId)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println("搜索到的区块连值为：", msg)
+	var msg string
+	var err error
+	maxRetry := 5 // 设置最大重试次数
+	for i := 0; i < maxRetry; i++ {
+		msg, err = global.ServiceSetup.QueryShareCode(fileId)
+		if err != nil {
+			fmt.Printf("Error: %s, retrying...\n", err.Error())
+		} else {
+			fmt.Println(msg)
+			break // 成功获取到结果，跳出循环
+		}
+		time.Sleep(1 * time.Second) // 暂停1秒后重试
 	}
 
 	//解析json数据

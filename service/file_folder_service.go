@@ -1,10 +1,14 @@
 package service
 
 import (
+	"fmt"
 	"gvf_server/global"
 	"gvf_server/models"
+	"gvf_server/service/common"
 	"os"
 	"path/filepath"
+	"strconv"
+	"time"
 )
 
 // CreateFolderRoot 创建用户根目录
@@ -14,6 +18,7 @@ func CreateFolderRoot(fileStoreId int, userName string) (*models.FileFolderModel
 		FileFolderName: userName,
 		FileStoreID:    fileStoreId,
 		ParentFolderID: 0,
+		Time:           time.Now().Format("2006-01-02 15:04:05"),
 	}
 	if err := global.DB.Create(&fileFolder).Error; err != nil {
 		return nil, err
@@ -34,4 +39,41 @@ func FindFolderRoot(fileStoreId int) (int, error) {
 		return result, err
 	}
 	return result, nil
+}
+
+// CreateFolder 新建文件夹
+func CreateFolder(folderName, parentId string, fileStoreId int) {
+	parentIdInt, err := strconv.Atoi(parentId)
+	if err != nil {
+		fmt.Println("父类id错误")
+		return
+	}
+	fileFolder := models.FileFolderModel{
+		FileFolderName: folderName,
+		ParentFolderID: parentIdInt,
+		FileStoreID:    fileStoreId,
+		Time:           time.Now().Format("2006-01-02 15:04:05"),
+	}
+	global.DB.Create(&fileFolder)
+}
+
+// GetCurrentFolderPath 获取当前路径所有的父级
+func GetCurrentFolderPath(folder models.FileFolderModel) string {
+	var parentFolder models.FileFolderModel
+	if folder.ParentFolderID != 0 {
+		global.DB.Find(&parentFolder, "id = ?", folder.ParentFolderID)
+		path := "/" + folder.FileFolderName
+		//递归查找当前所有父级
+		return GetCurrentFolderPath(parentFolder) + path
+	}
+	//最顶层文件夹
+	return folder.FileFolderName
+}
+
+// GetFolderByParent 获取当前目录下的文件夹
+func GetFolderByParent(storeId int, cr models.PageInfo) (files []models.FileModel, count int64, err error) {
+	searchCond := "file_store_id = ?"
+	searchValues := []interface{}{storeId}
+	files, count, err = common.ComList(models.FileModel{}, common.Option{PageInfo: cr}, searchCond, searchValues...)
+	return files, count, err
 }
