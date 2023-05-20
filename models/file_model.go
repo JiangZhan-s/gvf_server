@@ -1,6 +1,9 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+	"time"
+)
 
 // FileModel 文件表
 type FileModel struct {
@@ -19,6 +22,14 @@ type FileModel struct {
 	Postfix        string         `json:"postfix"`                                                                                  //文件后缀
 	FileStoreModel FileStoreModel `gorm:"foreignKey:FileStoreID; constraint:OnUpdate:RESTRICT,OnDelete:CASCADE;" json:"file_store"` // 添加外键关联到FileStoreModel
 	ShareFlag      int            `json:"share_flag"`
+}
+
+type FileResponse struct {
+	ID         uint      `json:"id"`
+	Name       string    `json:"name"`
+	UpdateTime time.Time `json:"update_time"`
+	SizeStr    string    `json:"size_str"`
+	IsFile     bool      `json:"is_file"`
 }
 
 type Data struct {

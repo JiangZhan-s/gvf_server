@@ -11,6 +11,6 @@ func (router RouterGroup) ShareRouter() {
 	router.GET("query_share_all", middleware.JwtAuth(), app.FileQueryAllView)
 	router.GET("query_share_by_id", middleware.JwtAuth(), app.ShareQueryByIdView)
 	router.GET("get_share_file_id_by_hash", app.ShareInfoQueryByHash)
-	router.GET("get_share_file_info_by_code", app.FileInfoQueryByCode)
+	router.GET("get_share_file_info_by_code", middleware.JwtAuth(), app.FileInfoQueryByCode)
 	router.GET("get_code_by_id", app.CodeQueryByIdView)
 }

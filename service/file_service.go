@@ -61,8 +61,8 @@ func GetUserFile(parentId string, storeId int) (files []models.FileModel) {
 
 // GetUserFileAll 获取用户的文件
 func GetUserFileAll(storeId int, cr models.PageInfo, parentFolderId string) (files []models.FileModel, count int64, err error) {
-	searchCond := "file_store_id = ? and parent_folder_id = ?"
-	searchValues := []interface{}{storeId, parentFolderId}
+	searchCond := "file_store_id = ? "
+	searchValues := []interface{}{storeId}
 	files, count, err = common.ComList(models.FileModel{}, common.Option{PageInfo: cr}, searchCond, searchValues...)
 	return files, count, err
 }
@@ -165,4 +165,34 @@ func GetUserShareAll(storeId int, cr models.PageInfo) (files []models.FileModel,
 	searchValues := []interface{}{storeId}
 	files, count, err = common.ComList(models.FileModel{}, common.Option{PageInfo: cr}, searchCond, searchValues...)
 	return files, count, err
+}
+
+func GetFileWithFolder(parentFolderID string) []models.FileResponse {
+	var files []models.FileModel
+	var fileFolders []models.FileFolderModel
+	var response []models.FileResponse
+
+	// 查询具有指定 ParentFolderID 的文件和文件夹
+	global.DB.Find(&files, "parent_folder_id = ?", parentFolderID)
+	global.DB.Find(&fileFolders, "parent_folder_id = ?", parentFolderID)
+
+	for _, folder := range fileFolders {
+		response = append(response, models.FileResponse{
+			ID:         folder.ID,
+			Name:       folder.FileFolderName,
+			UpdateTime: folder.UpdatedAt,
+			SizeStr:    "-", // 文件夹不需要大小字段
+			IsFile:     false,
+		})
+	}
+	for _, file := range files {
+		response = append(response, models.FileResponse{
+			ID:         file.ID,
+			Name:       file.FileName,
+			UpdateTime: file.UpdatedAt,
+			SizeStr:    file.SizeStr,
+			IsFile:     true,
+		})
+	}
+	return response
 }

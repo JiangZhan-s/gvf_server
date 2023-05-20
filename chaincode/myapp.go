@@ -312,13 +312,13 @@ func (t *SimpleChaincode) queryLedger(stub shim.ChaincodeStubInterface) pb.Respo
 				return shim.Error(fmt.Sprintf("Failed to unmarshal Path: %s", err.Error()))
 			}
 			ledgerData = append(ledgerData, LedgerData{Key: result.Key, DataType: "Share", Data: data})
-		case "L":
-			data := Log{}
-			err = json.Unmarshal(result.Value, &data)
-			if err != nil {
-				return shim.Error(fmt.Sprintf("Failed to unmarshal Path: %s", err.Error()))
-			}
-			ledgerData = append(ledgerData, LedgerData{Key: result.Key, DataType: "Log", Data: data})
+			//case "L":
+			//	data := Log{}
+			//	err = json.Unmarshal(result.Value, &data)
+			//	if err != nil {
+			//		return shim.Error(fmt.Sprintf("Failed to unmarshal Path: %s", err.Error()))
+			//	}
+			//	ledgerData = append(ledgerData, LedgerData{Key: result.Key, DataType: "Log", Data: data})
 			// 添加其他数据类型的处理逻辑
 		}
 	}

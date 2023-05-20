@@ -12,7 +12,6 @@ func CreateShare(fileId string, userId string) string {
 	hash := utils.GetSHA256ByteHashCode([]byte(fileId + "file+user" + userId))
 	fid, _ := strconv.Atoi(fileId)
 	uid, _ := strconv.Atoi(userId)
-	fmt.Println(fid, "看这里，前面是文件id后面是用户id", uid)
 	if GetShareByHash(hash).ID != 0 {
 		return hash
 	}

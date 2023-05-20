@@ -25,9 +25,7 @@ func (FileApi) FileUploadView(c *gin.Context) {
 		res.FailWithMessage(fmt.Sprintf("未找到用户:%d", userID), c)
 		return
 	}
-	fmt.Println(userID)
 	folderID := c.GetHeader("folder_id")
-	fmt.Println(folderID)
 	//接收上传文件
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
@@ -51,7 +49,6 @@ func (FileApi) FileUploadView(c *gin.Context) {
 	var fileFolder models.FileFolderModel
 	global.DB.Find(&fileFolder, "id = ?", folderID)
 	folderPath := service.GetCurrentFolderPath(fileFolder)
-	fmt.Println(folderPath)
 
 	newFile, err := os.Create(global.Path + "/" + folderPath + "/" + header.Filename)
 	if err != nil {
@@ -74,10 +71,8 @@ func (FileApi) FileUploadView(c *gin.Context) {
 		return
 	}
 	hashData := utils.GetSHA256HashCode(newFile)
-	fmt.Println(hashData)
 	//新建文件信息
 	fileID := service.CreateFile("/"+user.UserName, header.Filename, fileSize, folderID, user.FileStoreID, int(user.ID))
-	fmt.Println(fileID)
 	//上传成功减去相应剩余容量
 	service.SubtractSize(fileSize, user.FileStoreID)
 

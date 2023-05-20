@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"gvf_server/global"
 	"gvf_server/models"
 	"gvf_server/service/common"
@@ -42,19 +41,15 @@ func FindFolderRoot(fileStoreId int) (int, error) {
 }
 
 // CreateFolder 新建文件夹
-func CreateFolder(folderName, parentId string, fileStoreId int) {
-	parentIdInt, err := strconv.Atoi(parentId)
-	if err != nil {
-		fmt.Println("父类id错误")
-		return
-	}
+func CreateFolder(folderName string, parentId int, fileStoreId int) models.FileFolderModel {
 	fileFolder := models.FileFolderModel{
 		FileFolderName: folderName,
-		ParentFolderID: parentIdInt,
+		ParentFolderID: parentId,
 		FileStoreID:    fileStoreId,
 		Time:           time.Now().Format("2006-01-02 15:04:05"),
 	}
 	global.DB.Create(&fileFolder)
+	return fileFolder
 }
 
 // GetCurrentFolderPath 获取当前路径所有的父级
@@ -76,4 +71,26 @@ func GetFolderByParent(storeId int, cr models.PageInfo) (files []models.FileMode
 	searchValues := []interface{}{storeId}
 	files, count, err = common.ComList(models.FileModel{}, common.Option{PageInfo: cr}, searchCond, searchValues...)
 	return files, count, err
+}
+
+// GetFolderById 根据ID获取文件夹
+func GetFolderById(folderId string) (folder models.FileFolderModel, err error) {
+	err = global.DB.Where("id = ", folderId).First(&folder).Error
+	if err != nil {
+		return folder, err
+	}
+
+	return folder, nil
+}
+
+// GetParentFolderIDById 根据ID获取父文件夹ID
+func GetParentFolderIDById(folderId string) (parentId int, err error) {
+	var folder models.FileFolderModel
+	err = global.DB.Where("id = ?", folderId).First(&folder).Error
+	if err != nil {
+		self, _ := strconv.Atoi(folderId)
+		return self, err
+	}
+
+	return folder.ParentFolderID, nil
 }

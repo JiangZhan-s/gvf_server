@@ -6,3 +6,8 @@ type PageInfo struct {
 	Limit int    `form:"limit"`
 	Sort  string `form:"sort"`
 }
+
+type FolderInfo struct {
+	FolderName     string `json:"folderName"`
+	ParentFolderID int    `json:"parentFolderId"`
+}

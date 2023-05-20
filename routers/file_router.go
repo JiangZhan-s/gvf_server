@@ -12,4 +12,5 @@ func (router RouterGroup) FileRouter() {
 	router.GET("query_all", middleware.JwtAuth(), app.FileQueryAllView)
 	router.GET("download", middleware.JwtAuth(), app.FileDownloadByIdView)
 	router.GET("query_detail_use", middleware.JwtAuth(), app.FIleDetailUseView)
+	router.GET("query_file_with_folder", middleware.JwtAuth(), app.FileQueryWithFolderAllView)
 }

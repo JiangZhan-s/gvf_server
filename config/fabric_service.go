@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func (t *ServiceSetup) StoreShareCode(fileId, fileName, ownerId string) (string, error) {
+func (t *ServiceSetup) StoreShareCode(fileId, fileName, ownerId string) (string, string, error) {
 	eventID := "eventStoreShareCode"
 	reg, notifier := regitserEvent(t.Client, t.ChaincodeID, eventID)
 	defer t.Client.UnregisterChaincodeEvent(reg)
@@ -13,15 +13,15 @@ func (t *ServiceSetup) StoreShareCode(fileId, fileName, ownerId string) (string,
 	req := channel.Request{ChaincodeID: t.ChaincodeID, Fcn: "storeShareCode", Args: [][]byte{[]byte(fileId), []byte(fileName), []byte(ownerId), []byte(eventID)}}
 	respone, err := t.Client.Execute(req)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	err = eventResult(notifier, eventID)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return string(respone.TransactionID), nil
+	return string(respone.TransactionID), string(respone.Payload), nil
 }
 
 func (t *ServiceSetup) QueryShareCode(fileId string) (string, error) {

@@ -24,26 +24,19 @@ func (ShareApi) AddShareCodeView(c *gin.Context) {
 		res.FailWithMessage(fmt.Sprintf("未找到用户:%d", userID), c)
 		return
 	}
-	fmt.Println(userID)
 
 	fileId := c.GetHeader("file_id")
 	fileModel := service.GetFileInfo(fileId)
 
-	//msg, err := global.ServiceSetup.QueryShareCode(fileId)
-	//if err != nil {
-	//
-	//} else {
-	//	res.FailWithMessage("wenjian yijing fenxiang ", c)
-	//	return
-	//}
 	var msg string
+	var trans string
 	maxRetry := 5 // 设置最大重试次数
 	for i := 0; i < maxRetry; i++ {
-		msg, err = global.ServiceSetup.StoreShareCode(fileId, fileModel.FileName, string(user.ID))
+		trans, msg, err = global.ServiceSetup.StoreShareCode(fileId, fileModel.FileName, string(user.ID))
 		if err != nil {
 			fmt.Printf("Error: %s, retrying...\n", err.Error())
 		} else {
-			fmt.Println(msg)
+			fmt.Println(trans, msg)
 			break // 成功获取到结果，跳出循环
 		}
 		time.Sleep(1 * time.Second) // 暂停1秒后重试
@@ -55,12 +48,9 @@ func (ShareApi) AddShareCodeView(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(d)
 	//分享标志置为1
 	service.ShareFileUp(fileId)
 	//更新分享表
-	fmt.Println(userID)
-	fmt.Println(strconv.Itoa(int(userID)))
 	hash := service.CreateShare(fileId, strconv.Itoa(int(userID)))
 	data := "分享查询码是" + hash + "；分享提取码是" + d.ShareCode + "。"
 	res.OkWithData(data, c)

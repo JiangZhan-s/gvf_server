@@ -26,3 +26,43 @@ func (FileFolderApi) FolderRootFindView(c *gin.Context) {
 	}
 	res.OkWithData(folderRootId, c)
 }
+
+func (FileFolderApi) CurrentFolderPathView(c *gin.Context) {
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*jwts.CustomClaims)
+	userID := claims.UserID
+
+	//获取用户信息
+	_, err := service.GetUserInfo(userID)
+	if err != nil {
+		res.FailWithMessage(fmt.Sprintf("未找到用户:%d", userID), c)
+		return
+	}
+	folderId := c.GetHeader("folder_id")
+	folder, err := service.GetFolderById(folderId)
+
+	path := service.GetCurrentFolderPath(folder)
+
+	res.OkWithData(path, c)
+}
+
+func (FileFolderApi) ParentFolderIdView(c *gin.Context) {
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*jwts.CustomClaims)
+	userID := claims.UserID
+
+	//获取用户信息
+	_, err := service.GetUserInfo(userID)
+	if err != nil {
+		res.FailWithMessage(fmt.Sprintf("未找到用户:%d", userID), c)
+		return
+	}
+	folderId := c.GetHeader("folder_id")
+	parentFolderId, err := service.GetParentFolderIDById(folderId)
+
+	if parentFolderId == 0 {
+		res.FailWithMessage("已经是根文件夹", c)
+		return
+	}
+	res.OkWithData(parentFolderId, c)
+}

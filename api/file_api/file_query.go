@@ -53,3 +53,19 @@ func (FileApi) FIleDetailUseView(c *gin.Context) {
 	detailUse := service.GetFileDetailUse(user.FileStoreID)
 	res.OkWithData(detailUse, c)
 }
+
+func (FileApi) FileQueryWithFolderAllView(c *gin.Context) {
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*jwts.CustomClaims)
+	userID := claims.UserID
+
+	_, err := service.GetUserInfo(userID)
+	if err != nil {
+		res.FailWithMessage(fmt.Sprintf("未找到用户:%d", userID), c)
+		return
+	}
+	parentFolderId := c.GetHeader("parent_folder_id")
+
+	fileWithFolder := service.GetFileWithFolder(parentFolderId)
+	res.OkWithData(fileWithFolder, c)
+}
