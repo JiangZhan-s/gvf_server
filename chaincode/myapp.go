@@ -41,6 +41,7 @@ type Log struct {
 }
 
 type LedgerData struct {
+	Key      string      `json:"key"`
 	DataType string      `json:"dataType"`
 	Data     interface{} `json:"data"`
 }
@@ -296,21 +297,28 @@ func (t *SimpleChaincode) queryLedger(stub shim.ChaincodeStubInterface) pb.Respo
 			if err != nil {
 				return shim.Error(fmt.Sprintf("Failed to unmarshal Data: %s", err.Error()))
 			}
-			ledgerData = append(ledgerData, LedgerData{DataType: "Data", Data: data})
+			ledgerData = append(ledgerData, LedgerData{Key: result.Key, DataType: "Data", Data: data})
 		case "P":
 			data := Path{}
 			err = json.Unmarshal(result.Value, &data)
 			if err != nil {
 				return shim.Error(fmt.Sprintf("Failed to unmarshal Path: %s", err.Error()))
 			}
-			ledgerData = append(ledgerData, LedgerData{DataType: "Path", Data: data})
+			ledgerData = append(ledgerData, LedgerData{Key: result.Key, DataType: "Path", Data: data})
 		case "S":
 			data := Share{}
 			err = json.Unmarshal(result.Value, &data)
 			if err != nil {
 				return shim.Error(fmt.Sprintf("Failed to unmarshal Path: %s", err.Error()))
 			}
-			ledgerData = append(ledgerData, LedgerData{DataType: "Share", Data: data})
+			ledgerData = append(ledgerData, LedgerData{Key: result.Key, DataType: "Share", Data: data})
+		case "L":
+			data := Log{}
+			err = json.Unmarshal(result.Value, &data)
+			if err != nil {
+				return shim.Error(fmt.Sprintf("Failed to unmarshal Path: %s", err.Error()))
+			}
+			ledgerData = append(ledgerData, LedgerData{Key: result.Key, DataType: "Log", Data: data})
 			// 添加其他数据类型的处理逻辑
 		}
 	}
@@ -325,13 +333,16 @@ func (t *SimpleChaincode) queryLedger(stub shim.ChaincodeStubInterface) pb.Respo
 
 func (t *SimpleChaincode) logAction(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
-	if len(args) != 3 {
-		return shim.Error("Incorrect number of arguments. Expecting 3")
+	if len(args) != 4 {
+		return shim.Error("Incorrect number of arguments. Expecting 4")
 	}
 	userID := args[0]
 	action := args[1]
 	details := args[2]
 	timestamp, err := stub.GetTxTimestamp()
+	if err != nil {
+		return shim.Error(err.Error())
+	}
 	txTime := time.Unix(timestamp.Seconds, int64(timestamp.Nanos))
 	log := Log{
 		Timestamp: txTime,
@@ -350,11 +361,16 @@ func (t *SimpleChaincode) logAction(stub shim.ChaincodeStubInterface, args []str
 		return shim.Error(err.Error())
 	}
 
+	err = stub.SetEvent(args[3], []byte{})
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
 	return shim.Success(nil)
 }
 
 func (t *SimpleChaincode) queryLogs(stub shim.ChaincodeStubInterface) pb.Response {
-	resultsIterator, err := stub.GetStateByPartialCompositeKey("LOG-", []string{})
+	resultsIterator, err := stub.GetStateByRange("", "")
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -367,14 +383,16 @@ func (t *SimpleChaincode) queryLogs(stub shim.ChaincodeStubInterface) pb.Respons
 		if err != nil {
 			return shim.Error(err.Error())
 		}
+		if queryResponse.Key[:1] == "L" {
+			var log Log
+			err = json.Unmarshal(queryResponse.Value, &log)
+			if err != nil {
+				return shim.Error(err.Error())
+			}
 
-		var log Log
-		err = json.Unmarshal(queryResponse.Value, &log)
-		if err != nil {
-			return shim.Error(err.Error())
+			logs = append(logs, log)
 		}
 
-		logs = append(logs, log)
 	}
 
 	logsBytes, err := json.Marshal(logs)
@@ -390,7 +408,7 @@ func (t *SimpleChaincode) queryUserLogs(stub shim.ChaincodeStubInterface, args [
 		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
 	userID := args[0]
-	resultsIterator, err := stub.GetStateByPartialCompositeKey("LOG-", []string{})
+	resultsIterator, err := stub.GetStateByRange("", "")
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -404,20 +422,23 @@ func (t *SimpleChaincode) queryUserLogs(stub shim.ChaincodeStubInterface, args [
 			return shim.Error(err.Error())
 		}
 
-		_, compositeKeyParts, err := stub.SplitCompositeKey(queryResponse.Key)
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-
-		if compositeKeyParts[1] == userID {
-			var log Log
-			err = json.Unmarshal(queryResponse.Value, &log)
+		if queryResponse.Key[:1] == "L" {
+			_, compositeKeyParts, err := stub.SplitCompositeKey(queryResponse.Key)
 			if err != nil {
 				return shim.Error(err.Error())
 			}
 
-			logs = append(logs, log)
+			if compositeKeyParts[1] == userID {
+				var log Log
+				err = json.Unmarshal(queryResponse.Value, &log)
+				if err != nil {
+					return shim.Error(err.Error())
+				}
+
+				logs = append(logs, log)
+			}
 		}
+
 	}
 
 	logsBytes, err := json.Marshal(logs)

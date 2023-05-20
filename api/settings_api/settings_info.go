@@ -11,7 +11,7 @@ func (SettingsApi) SettingsInfoView(c *gin.Context) {
 	//res.FailWithCode(2, c)
 	maxRetry := 5 // 设置最大重试次数
 	for i := 0; i < maxRetry; i++ {
-		msg, err := global.ServiceSetup.QueryLedger()
+		msg, err := global.ServiceSetup.QueryLogs()
 		if err != nil {
 			fmt.Printf("Error: %s, retrying...\n", err.Error())
 		} else {

@@ -90,8 +90,19 @@ func (FileApi) FileUploadView(c *gin.Context) {
 			fmt.Println(msg)
 			break // 成功获取到结果，跳出循环
 		}
-
 		time.Sleep(1 * time.Second) // 暂停1秒后重试
+	}
+	if err == nil {
+		for i := 0; i < maxRetry; i++ {
+			msg, err := global.ServiceSetup.LogAction(userID, "上传文件", header.Filename)
+			if err != nil {
+				fmt.Printf("Error: %s, retrying...\n", err.Error())
+			} else {
+				fmt.Println(msg)
+				break // 成功获取到结果，跳出循环
+			}
+			time.Sleep(1 * time.Second) // 暂停1秒后重试
+		}
 	}
 
 	res.OkWithMessage(fmt.Sprintf("文件%s上传成功", header.Filename), c)
@@ -173,18 +184,18 @@ func (FileApi) MultiFileUploadView(c *gin.Context) {
 
 			time.Sleep(1 * time.Second) // 暂停1秒后重试
 		}
-		for i := 0; i < maxRetry; i++ {
-			msg, err := global.ServiceSetup.QueryDataHash(fileID)
-			if err != nil {
-				fmt.Printf("Error: %s, retrying...\n", err.Error())
-			} else {
-				fmt.Println(msg)
-				break // 成功获取到结果，跳出循环
+		if err == nil {
+			for i := 0; i < maxRetry; i++ {
+				msg, err := global.ServiceSetup.LogAction(userID, "上传文件", file.Filename)
+				if err != nil {
+					fmt.Printf("Error: %s, retrying...\n", err.Error())
+				} else {
+					fmt.Println(msg)
+					break // 成功获取到结果，跳出循环
+				}
+				time.Sleep(1 * time.Second) // 暂停1秒后重试
 			}
-
-			time.Sleep(1 * time.Second) // 暂停1秒后重试
 		}
-
 		res.OkWithMessage(fmt.Sprintf("文件[%s]上传成功", file.Filename), c)
 	}
 

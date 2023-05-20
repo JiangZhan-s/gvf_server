@@ -5,6 +5,7 @@ import (
 	"gvf_server/global"
 	"gvf_server/models"
 	"gvf_server/models/res"
+	"gvf_server/service"
 	"gvf_server/utils/jwts"
 	"gvf_server/utils/pwd"
 )
@@ -12,6 +13,8 @@ import (
 type EmailLoginRequest struct {
 	UserName string `json:"user_name"`
 	Password string `json:"password"`
+	IP       string `json:"ip"`
+	City     string `json:"city"`
 }
 
 // EmailLoginView 登录
@@ -48,7 +51,7 @@ func (UserApi) EmailLoginView(c *gin.Context) {
 	if err != nil {
 		global.Log.Error(err)
 		res.FailWithMessage("token生成失败", c)
-		return
 	}
 	res.OkWithData(token, c)
+	service.AddLoginData(int(userModel.ID), cr.IP, userModel.NickName, token, cr.City)
 }

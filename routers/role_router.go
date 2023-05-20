@@ -6,7 +6,7 @@ import (
 )
 
 func (router RouterGroup) RoleRouter() {
-	RoleApi := api.ApiGroupApp.RoleAPI
+	RoleApi := api.ApiGroupApp.RoleApi
 	router.POST("add_role", middleware.JwtAuth(), RoleApi.AddRoleView)
 	router.GET("query_role_all", middleware.JwtAuth(), RoleApi.RoleQueryAllView)
 	router.POST("delete_role_by_id", middleware.JwtAuth(), RoleApi.RoleDeleteByIdView)

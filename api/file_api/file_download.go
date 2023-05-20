@@ -13,6 +13,7 @@ import (
 	"gvf_server/utils/jwts"
 	"os"
 	"path"
+	"time"
 )
 
 func (FileApi) FileDownloadByIdView(c *gin.Context) {
@@ -45,10 +46,16 @@ func (FileApi) FileDownloadByIdView(c *gin.Context) {
 	hashData := utils.GetSHA256HashCode(file)
 	fmt.Println(hashData)
 	//对比链上连下数据哈希是否相等
-	msg, err := global.ServiceSetup.QueryDataHash(fileId)
-	if err != nil {
-		fmt.Println(err)
-		return
+	maxRetry := 5
+	var msg string
+	for i := 0; i < maxRetry; i++ {
+		msg, err = global.ServiceSetup.QueryDataHash(fileId)
+		if err != nil {
+			fmt.Printf("Error: %s, retrying...\n", err.Error())
+		} else {
+			fmt.Println(msg)
+			break // 成功获取到结果，跳出循环
+		}
 	}
 
 	//解析json数据
@@ -70,5 +77,16 @@ func (FileApi) FileDownloadByIdView(c *gin.Context) {
 
 	// 更新下载次数
 	service.DownloadNumAdd(fileId)
+
+	for i := 0; i < maxRetry; i++ {
+		msg, err := global.ServiceSetup.LogAction(userID, "下载文件", fileName)
+		if err != nil {
+			fmt.Printf("Error: %s, retrying...\n", err.Error())
+		} else {
+			fmt.Println(msg)
+			break // 成功获取到结果，跳出循环
+		}
+		time.Sleep(1 * time.Second) // 暂停1秒后重试
+	}
 
 }

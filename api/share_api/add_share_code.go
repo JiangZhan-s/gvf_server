@@ -64,4 +64,13 @@ func (ShareApi) AddShareCodeView(c *gin.Context) {
 	hash := service.CreateShare(fileId, strconv.Itoa(int(userID)))
 	data := "分享查询码是" + hash + "；分享提取码是" + d.ShareCode + "。"
 	res.OkWithData(data, c)
+	for i := 0; i < maxRetry; i++ {
+		msg, err = global.ServiceSetup.LogAction(userID, "创建分享", hash)
+		if err != nil {
+			fmt.Printf("Error: %s, retrying...\n", err.Error())
+		} else {
+			fmt.Println(msg)
+			break // 成功获取到结果，跳出循环
+		}
+	}
 }

@@ -74,12 +74,21 @@ func (ShareApi) ShareInfoQueryByHash(c *gin.Context) {
 
 // FileInfoQueryByCode 验证提取玛并返回文件信息或错误信息
 func (ShareApi) FileInfoQueryByCode(c *gin.Context) {
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*jwts.CustomClaims)
+	userID := claims.UserID
+
+	//获取用户信息
+	user, err := service.GetUserInfo(userID)
+	if err != nil {
+		res.FailWithMessage(fmt.Sprintf("未找到用户:%d", userID), c)
+		return
+	}
 	hashCode := c.GetHeader("hash_code")
 	fileId := c.GetHeader("file_id")
 
 	//获取区块链中的hashcode
 	var msg string
-	var err error
 	maxRetry := 5 // 设置最大重试次数
 	for i := 0; i < maxRetry; i++ {
 		msg, err = global.ServiceSetup.QueryShareCode(fileId)
@@ -94,6 +103,7 @@ func (ShareApi) FileInfoQueryByCode(c *gin.Context) {
 
 	//解析json数据
 	var d models.Share
+	var success string
 	err = json.Unmarshal([]byte(msg), &d)
 	if err != nil {
 		panic(err)
@@ -101,7 +111,19 @@ func (ShareApi) FileInfoQueryByCode(c *gin.Context) {
 	if d.ShareCode == hashCode {
 		fileInfo := service.GetFileInfo(fileId)
 		res.OkWithData(fileInfo, c)
+		success = "成功"
 		return
+	} else {
+		res.FailWithMessage("错误的提取码", c)
+		success = "失败"
 	}
-	res.FailWithMessage("错误的提取码", c)
+	for i := 0; i < maxRetry; i++ {
+		msg, err = global.ServiceSetup.LogAction(user.ID, "提取文件"+success, "文件id:"+fileId)
+		if err != nil {
+			fmt.Printf("Error: %s, retrying...\n", err.Error())
+		} else {
+			fmt.Println(msg)
+			break // 成功获取到结果，跳出循环
+		}
+	}
 }
