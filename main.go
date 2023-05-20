@@ -1,14 +1,23 @@
 package main
 
 import (
+	"fmt"
+	"gvf_server/config"
 	"gvf_server/core"
 	"gvf_server/flag"
 	"gvf_server/global"
 	"gvf_server/routers"
+	"gvf_server/sdkInit"
+	"os"
+)
+
+const (
+	configFile  = "config.yaml"
+	initialized = false
+	SimpleCC    = "myapp"
 )
 
 func main() {
-	var err error
 	//读取配置文件
 	core.InitConf()
 	//初始化日志
@@ -25,11 +34,47 @@ func main() {
 		flag.SwitchOption(option)
 		return
 	}
-	//初始化fabric
-	//global.ChannelClient, global.ServiceSetup, err = core.InitFabric()
-	if err != nil {
-		global.Log.Fatalf(err.Error())
+
+	initInfo := &sdkInit.InitInfo{
+
+		ChannelID:     "mychannel",
+		ChannelConfig: os.Getenv("GOPATH") + "/src/gvf_project/gvf_server/fixtures/channel-artifacts/channel.tx",
+
+		OrgAdmin:       "Admin",
+		OrgName:        "Org1",
+		OrdererOrgName: "orderer.example.com",
+
+		ChaincodeID:     SimpleCC,
+		ChaincodeGoPath: os.Getenv("GOPATH"),
+		ChaincodePath:   "gvf_project/gvf_server/chaincode/",
+		UserName:        "Admin",
 	}
+
+	sdk, err := sdkInit.SetupSDK(configFile, initialized)
+	if err != nil {
+		fmt.Printf(err.Error())
+		return
+	}
+
+	defer sdk.Close()
+
+	err = sdkInit.CreateChannel(sdk, initInfo)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	global.ChannelClient, err = sdkInit.InstallAndInstantiateCC(sdk, initInfo)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Println(global.ChannelClient)
+
+	global.ServiceSetup = config.ServiceSetup{
+		ChaincodeID: SimpleCC,
+		Client:      global.ChannelClient,
+	}
+
 	router := routers.InitRouter()
 	addr := global.Config.System.Addrr()
 	global.Log.Infof("gvf_server运行在:%s", addr)

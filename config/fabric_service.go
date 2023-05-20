@@ -64,3 +64,13 @@ func (t *ServiceSetup) QueryDataHash(name string) (string, error) {
 
 	return string(respone.Payload), nil
 }
+
+func (t *ServiceSetup) QueryLedger() (string, error) {
+	req := channel.Request{ChaincodeID: t.ChaincodeID, Fcn: "queryLedger", Args: [][]byte{}}
+	respone, err := t.Client.Query(req)
+	if err != nil {
+		return "", err
+	}
+
+	return string(respone.Payload), nil
+}

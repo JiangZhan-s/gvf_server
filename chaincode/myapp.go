@@ -8,6 +8,8 @@ import (
 	"github.com/hyperledger/fabric/common/crypto"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	"strconv"
+	"time"
 )
 
 // Data 数据结构定义
@@ -28,6 +30,19 @@ type Path struct {
 type Share struct {
 	OwnerId   string //json:"ownerId"
 	ShareCode string //json:"shareCode"
+}
+
+type Log struct {
+	Timestamp time.Time // 日志时间戳
+	UserID    string    // 用户ID
+	Action    string    // 操作类型
+	Details   string    // 操作详情
+	// 其他日志属性
+}
+
+type LedgerData struct {
+	DataType string      `json:"dataType"`
+	Data     interface{} `json:"data"`
 }
 
 type SimpleChaincode struct {
@@ -56,6 +71,14 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.queryShareCode(stub, args)
 	} else if function == "storeShareCode" {
 		return t.storeShareCode(stub, args)
+	} else if function == "queryLedger" {
+		return t.queryLedger(stub)
+	} else if function == "logAction" {
+		return t.logAction(stub, args)
+	} else if function == "queryLogs" {
+		return t.queryLogs(stub)
+	} else if function == "queryUserLogs" {
+		return t.queryUserLogs(stub, args)
 	}
 	return shim.Error("Invalid function name.")
 }
@@ -236,7 +259,7 @@ func (t *SimpleChaincode) storeShareCode(stub shim.ChaincodeStubInterface, args 
 		return shim.Error(err.Error())
 	}
 
-	return shim.Success(nil)
+	return shim.Success(shareDataBytes)
 }
 
 // 生成指定长度的随机数
@@ -247,6 +270,162 @@ func generateRandomNumber(length int) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(randomNumber), nil
+}
+
+func (t *SimpleChaincode) queryLedger(stub shim.ChaincodeStubInterface) pb.Response {
+	resultsIterator, err := stub.GetStateByRange("", "")
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Failed to query ledger: %s", err.Error()))
+	}
+	defer resultsIterator.Close()
+
+	var ledgerData []LedgerData
+	for resultsIterator.HasNext() {
+		result, err := resultsIterator.Next()
+		if err != nil {
+			return shim.Error(fmt.Sprintf("Failed to retrieve ledger data: %s", err.Error()))
+		}
+
+		// 根据实际情况解析不同类型的数据
+		// 这里假设数据类型保存在result.Key的前缀中，例如"H"代表数据类型为Data，"P"代表数据类型为Path
+		dataType := result.Key[:1]
+		switch dataType {
+		case "H":
+			data := Data{}
+			err = json.Unmarshal(result.Value, &data)
+			if err != nil {
+				return shim.Error(fmt.Sprintf("Failed to unmarshal Data: %s", err.Error()))
+			}
+			ledgerData = append(ledgerData, LedgerData{DataType: "Data", Data: data})
+		case "P":
+			data := Path{}
+			err = json.Unmarshal(result.Value, &data)
+			if err != nil {
+				return shim.Error(fmt.Sprintf("Failed to unmarshal Path: %s", err.Error()))
+			}
+			ledgerData = append(ledgerData, LedgerData{DataType: "Path", Data: data})
+		case "S":
+			data := Share{}
+			err = json.Unmarshal(result.Value, &data)
+			if err != nil {
+				return shim.Error(fmt.Sprintf("Failed to unmarshal Path: %s", err.Error()))
+			}
+			ledgerData = append(ledgerData, LedgerData{DataType: "Share", Data: data})
+			// 添加其他数据类型的处理逻辑
+		}
+	}
+
+	ledgerBytes, err := json.Marshal(ledgerData)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Failed to marshal ledger data: %s", err.Error()))
+	}
+
+	return shim.Success(ledgerBytes)
+}
+
+func (t *SimpleChaincode) logAction(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+
+	if len(args) != 3 {
+		return shim.Error("Incorrect number of arguments. Expecting 3")
+	}
+	userID := args[0]
+	action := args[1]
+	details := args[2]
+	timestamp, err := stub.GetTxTimestamp()
+	txTime := time.Unix(timestamp.Seconds, int64(timestamp.Nanos))
+	log := Log{
+		Timestamp: txTime,
+		UserID:    userID,
+		Action:    action,
+		Details:   details,
+	}
+
+	logBytes, err := json.Marshal(log)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	err = stub.PutState("LOG-"+strconv.FormatInt(log.Timestamp.UnixNano(), 10), logBytes)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	return shim.Success(nil)
+}
+
+func (t *SimpleChaincode) queryLogs(stub shim.ChaincodeStubInterface) pb.Response {
+	resultsIterator, err := stub.GetStateByPartialCompositeKey("LOG-", []string{})
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	defer resultsIterator.Close()
+
+	var logs []Log
+
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+
+		var log Log
+		err = json.Unmarshal(queryResponse.Value, &log)
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+
+		logs = append(logs, log)
+	}
+
+	logsBytes, err := json.Marshal(logs)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	return shim.Success(logsBytes)
+}
+
+func (t *SimpleChaincode) queryUserLogs(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+	userID := args[0]
+	resultsIterator, err := stub.GetStateByPartialCompositeKey("LOG-", []string{})
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	defer resultsIterator.Close()
+
+	var logs []Log
+
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+
+		_, compositeKeyParts, err := stub.SplitCompositeKey(queryResponse.Key)
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+
+		if compositeKeyParts[1] == userID {
+			var log Log
+			err = json.Unmarshal(queryResponse.Value, &log)
+			if err != nil {
+				return shim.Error(err.Error())
+			}
+
+			logs = append(logs, log)
+		}
+	}
+
+	logsBytes, err := json.Marshal(logs)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	return shim.Success(logsBytes)
 }
 
 // 启动智能合约
