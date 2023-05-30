@@ -58,17 +58,27 @@ func main() {
 
 	defer sdk.Close()
 
-	err = sdkInit.CreateChannel(sdk, initInfo)
+	//err = sdkInit.CreateChannel(sdk, initInfo)
+	//if err != nil {
+	//	fmt.Println(err.Error())
+	//	return
+	//}
+	//
+	//global.ChannelClient, err = sdkInit.InstallAndInstantiateCC(sdk, initInfo)
+	//if err != nil {
+	//	fmt.Println(err.Error())
+	//	return
+	//}
+	//fmt.Println(global.ChannelClient)
+
+	global.ChannelClient, err = sdkInit.GetChannelClient(sdk, initInfo)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Printf("获取通道客户端失败: %v", err)
 		return
 	}
-	global.ChannelClient, err = sdkInit.InstallAndInstantiateCC(sdk, initInfo)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	fmt.Println(global.ChannelClient)
+
+	// 在这里可以使用 channelClient 对象调用链码进行查询或执行事务
+	// ...
 
 	global.ServiceSetup = config.ServiceSetup{
 		ChaincodeID: SimpleCC,

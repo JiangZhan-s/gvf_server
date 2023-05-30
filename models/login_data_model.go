@@ -15,3 +15,8 @@ type LoginDataModel struct {
 	Device    string    `gorm:"size:256" json:"device"`
 	Addr      string    `gorm:"size:64" json:"addr"`
 }
+
+type LoginCountResult struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}

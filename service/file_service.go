@@ -26,7 +26,7 @@ func CreateFile(filePath string, fileName string, fileSize int64, fId string, fi
 	if fileSize < 1048576 {
 		sizeStr = fmt.Sprintf("%dKB", fileSize/1024)
 	} else {
-		sizeStr = fmt.Sprintf("%dMB", fileSize/102400)
+		sizeStr = fmt.Sprintf("%dMB", fileSize/1024000)
 	}
 
 	myFile := models.FileModel{

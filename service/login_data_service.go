@@ -30,3 +30,18 @@ func GetLoginDataAll(cr models.PageInfo) (loginData []models.LoginDataModel, cou
 	loginData, count, err = common.ComList(models.LoginDataModel{}, common.Option{PageInfo: cr}, searchCond, searchValues...)
 	return loginData, count, err
 }
+
+func GetLoginCount() ([]models.LoginCountResult, error) {
+	var loginCounts []models.LoginCountResult
+
+	// 查询数据库中的数据
+	err := global.DB.Table("login_data_models").
+		Select("DATE(created_at) as date, COUNT(*) as count").
+		Group("DATE(created_at)").
+		Scan(&loginCounts).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return loginCounts, nil
+}

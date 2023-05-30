@@ -37,3 +37,8 @@ func (LoginDataApi) LoginDataQueryAllView(c *gin.Context) {
 	res.OKWithList(files, count, c)
 
 }
+
+func (LoginDataApi) LoginCountQueryView(c *gin.Context) {
+	result, _ := service.GetLoginCount()
+	res.OkWithData(result, c)
+}

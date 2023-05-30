@@ -119,3 +119,13 @@ func InstallAndInstantiateCC(sdk *fabsdk.FabricSDK, info *InitInfo) (*channel.Cl
 
 	return channelClient, nil
 }
+
+func GetChannelClient(sdk *fabsdk.FabricSDK, info *InitInfo) (*channel.Client, error) {
+	clientChannelContext := sdk.ChannelContext(info.ChannelID, fabsdk.WithUser(info.UserName), fabsdk.WithOrg(info.OrgName))
+	channelClient, err := channel.New(clientChannelContext)
+	if err != nil {
+		return nil, fmt.Errorf("创建应用通道客户端失败: %v", err)
+	}
+
+	return channelClient, nil
+}

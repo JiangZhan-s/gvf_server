@@ -11,8 +11,31 @@ import (
 	"gvf_server/utils/jwts"
 	"io"
 	"os"
+	"strconv"
 	"time"
 )
+
+// ProgressTracker 进度追踪器
+type ProgressTracker struct {
+	Context     *gin.Context
+	TotalSize   int64
+	CurrentSize int64
+}
+
+// 实现 io.Writer 接口，用于追踪写入的数据大小
+func (p *ProgressTracker) Write(data []byte) (int, error) {
+	n := len(data)
+	p.CurrentSize += int64(n)
+
+	// 计算上传进度
+	progress := float64(p.CurrentSize) / float64(p.TotalSize) * 100
+
+	// 将上传进度设置到Context中，可以在其他地方使用
+	p.Context.Set("uploadProgress", progress)
+
+	// 返回写入的字节数和错误
+	return n, nil
+}
 
 func (FileApi) FileUploadView(c *gin.Context) {
 	_claims, _ := c.Get("claims")
@@ -28,6 +51,8 @@ func (FileApi) FileUploadView(c *gin.Context) {
 	folderID := c.GetHeader("folder_id")
 	//接收上传文件
 	file, header, err := c.Request.FormFile("file")
+	fileSize, err := strconv.ParseInt(c.Request.FormValue("fileSize"), 10, 64)
+
 	if err != nil {
 		res.FailWithMessage("文件上传错误", c)
 		res.FailWithError(err, folderID, c)
@@ -57,8 +82,15 @@ func (FileApi) FileUploadView(c *gin.Context) {
 	}
 	defer newFile.Close()
 
+	// 创建进度追踪器
+	progress := &ProgressTracker{
+		Context:     c,
+		TotalSize:   fileSize,
+		CurrentSize: 0,
+	}
 	//将上传文件拷贝至新创建的文件中
-	fileSize, err := io.Copy(newFile, file)
+	//_, err = io.Copy(newFile, file)
+	_, err = io.Copy(newFile, io.TeeReader(file, progress))
 	if err != nil {
 		res.FailWithMessage("文件拷贝错误", c)
 		return
@@ -125,8 +157,10 @@ func (FileApi) MultiFileUploadView(c *gin.Context) {
 		return
 	}
 	files := form.File["file"]
+
 	fmt.Println(files)
 	for _, file := range files {
+
 		// 读取文件
 		inFile, err := file.Open()
 		if err != nil {
@@ -134,6 +168,15 @@ func (FileApi) MultiFileUploadView(c *gin.Context) {
 			return
 		}
 		defer inFile.Close()
+
+		fileSize := file.Size
+
+		// 创建进度追踪器
+		progress := &ProgressTracker{
+			Context:     c,
+			TotalSize:   fileSize,
+			CurrentSize: 0,
+		}
 
 		// 创建新文件
 		newFile, err := os.Create(global.Path + "/" + user.UserName + "/" + file.Filename)
@@ -144,7 +187,9 @@ func (FileApi) MultiFileUploadView(c *gin.Context) {
 		defer newFile.Close()
 
 		// 拷贝文件
-		fileSize, err := io.Copy(newFile, inFile)
+
+		_, err = io.Copy(newFile, io.TeeReader(inFile, progress))
+		//fileSize, err := io.Copy(newFile, inFile)
 		if err != nil {
 			res.FailWithMessage("文件拷贝错误", c)
 			return

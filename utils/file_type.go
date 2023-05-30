@@ -15,10 +15,10 @@ func GetFileTypeInt(filePrefix string) int {
 		return 2
 	}
 	if filePrefix == ".mp4" || filePrefix == ".avi" || filePrefix == ".mov" || filePrefix == ".rmvb" || filePrefix == ".rm" {
-		return 3
+		return 4
 	}
 	if filePrefix == ".mp3" || filePrefix == ".cda" || filePrefix == ".wav" || filePrefix == ".wma" || filePrefix == ".ogg" {
-		return 4
+		return 3
 	}
 
 	return 5
