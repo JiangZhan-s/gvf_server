@@ -52,7 +52,7 @@ func (ShareApi) AddShareCodeView(c *gin.Context) {
 	service.ShareFileUp(fileId)
 	//更新分享表
 	hash := service.CreateShare(fileId, strconv.Itoa(int(userID)))
-	data := "分享查询码是" + hash + "；分享提取码是" + d.ShareCode + "。"
+	data := "分享查询码是" + hash + "；分享提取码是" + d.ShareCode
 	res.OkWithData(data, c)
 	for i := 0; i < maxRetry; i++ {
 		msg, err = global.ServiceSetup.LogAction(userID, "创建分享", hash)

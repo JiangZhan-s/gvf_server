@@ -9,7 +9,6 @@ import (
 	"gvf_server/service"
 	"gvf_server/utils/jwts"
 	"net/http"
-	"os"
 )
 
 // FolderAddView 创建文件夹
@@ -31,15 +30,12 @@ func (FileFolderApi) FolderAddView(c *gin.Context) {
 	}
 	parentFolderId := folderInfo.ParentFolderID
 	folderName := folderInfo.FolderName
-	fileFolder := service.CreateFolder(folderName, parentFolderId, user.FileStoreID)
-	res.OkWithMessage("创建成功", c)
-	// 创建文件夹
-	folderPath := service.GetCurrentFolderPath(fileFolder)
-	err = os.MkdirAll(global.Path+"/"+folderPath+"/"+folderName, 0755)
+	_, err = service.CreateFolder(folderName, parentFolderId, user.FileStoreID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		res.FailWithMessage("创建文件夹失败", c)
 		return
 	}
+	res.OkWithMessage("创建成功", c)
 	maxRetry := 5
 	var msg string
 	for i := 0; i < maxRetry; i++ {

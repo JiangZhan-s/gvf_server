@@ -61,8 +61,10 @@ func (FileApi) FileUploadView(c *gin.Context) {
 	defer file.Close()
 	//判断当前文件夹是否有同名文件
 	if service.CurrFileExists(folderID, header.Filename) {
-		res.FailWithMessage("当前文件夹已有同名文件存在", c)
-		return
+		currentTime := time.Now()
+		// 将当前时间格式化为字符串
+		timeStr := currentTime.Format("2006-01-02 15:04:05")
+		header.Filename = header.Filename + timeStr
 	}
 
 	//判断用户的容量是否足够
@@ -104,7 +106,7 @@ func (FileApi) FileUploadView(c *gin.Context) {
 	}
 	hashData := utils.GetSHA256HashCode(newFile)
 	//新建文件信息
-	fileID := service.CreateFile("/"+user.UserName, header.Filename, fileSize, folderID, user.FileStoreID, int(user.ID))
+	fileID := service.CreateFile("/"+folderPath, header.Filename, fileSize, folderID, user.FileStoreID, int(user.ID))
 	//上传成功减去相应剩余容量
 	service.SubtractSize(fileSize, user.FileStoreID)
 
@@ -205,8 +207,11 @@ func (FileApi) MultiFileUploadView(c *gin.Context) {
 		// 计算文件哈希值
 		hashData := utils.GetSHA256HashCode(newFile)
 
+		var fileFolder models.FileFolderModel
+		global.DB.Find(&fileFolder, "id = ?", folderID)
+		folderPath := service.GetCurrentFolderPath(fileFolder)
 		// 新建文件信息
-		fileID := service.CreateFile("/"+user.UserName, file.Filename, fileSize, folderID, user.FileStoreID, int(user.ID))
+		fileID := service.CreateFile("/"+folderPath, file.Filename, fileSize, folderID, user.FileStoreID, int(user.ID))
 
 		// 上传成功减去相应剩余容量
 		service.SubtractSize(fileSize, user.FileStoreID)
@@ -240,4 +245,32 @@ func (FileApi) MultiFileUploadView(c *gin.Context) {
 	}
 
 	res.OkWithMessage("所有文件上传完成", c)
+}
+
+func (FileApi) FolderUploadView(c *gin.Context) {
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*jwts.CustomClaims)
+	userID := claims.UserID
+
+	// 获取用户信息
+	user, err := service.GetUserInfo(userID)
+	if err != nil {
+		res.FailWithMessage(fmt.Sprintf("未找到用户:%d", userID), c)
+		return
+	}
+	parentFolderID := c.GetHeader("parent_folder_id")
+	// 判断当前文件夹是否有同名文件
+	folderName := c.GetHeader("folder_name")
+	if service.CurrFolderExists(parentFolderID, folderName) {
+		res.FailWithMessage("当前文件夹已有同名文件夹存在", c)
+		currentTime := time.Now()
+		// 将当前时间格式化为字符串
+		timeStr := currentTime.Format("2006-01-02 15:04:05")
+		folderName = folderName + timeStr
+	}
+
+	parentFolderId, _ := strconv.Atoi(parentFolderID)
+	folderId, _ := service.CreateFolder(folderName, parentFolderId, user.FileStoreID)
+
+	res.OkWithData(folderId, c)
 }

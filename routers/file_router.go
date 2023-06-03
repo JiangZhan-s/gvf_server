@@ -13,4 +13,6 @@ func (router RouterGroup) FileRouter() {
 	router.GET("download", middleware.JwtAuth(), app.FileDownloadByIdView)
 	router.GET("query_detail_use", middleware.JwtAuth(), app.FIleDetailUseView)
 	router.GET("query_file_with_folder", middleware.JwtAuth(), app.FileQueryWithFolderAllView)
+	router.POST("upload_folder", middleware.JwtAuth(), app.FolderUploadView)
+	router.POST("file_delete", middleware.JwtAuth(), app.FileDeleteView)
 }

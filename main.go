@@ -58,24 +58,24 @@ func main() {
 
 	defer sdk.Close()
 
-	//err = sdkInit.CreateChannel(sdk, initInfo)
-	//if err != nil {
-	//	fmt.Println(err.Error())
-	//	return
-	//}
-	//
-	//global.ChannelClient, err = sdkInit.InstallAndInstantiateCC(sdk, initInfo)
-	//if err != nil {
-	//	fmt.Println(err.Error())
-	//	return
-	//}
-	//fmt.Println(global.ChannelClient)
-
-	global.ChannelClient, err = sdkInit.GetChannelClient(sdk, initInfo)
+	err = sdkInit.CreateChannel(sdk, initInfo)
 	if err != nil {
-		fmt.Printf("获取通道客户端失败: %v", err)
+		fmt.Println(err.Error())
 		return
 	}
+
+	global.ChannelClient, err = sdkInit.InstallAndInstantiateCC(sdk, initInfo)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Println(global.ChannelClient)
+
+	//global.ChannelClient, err = sdkInit.GetChannelClient(sdk, initInfo)
+	//if err != nil {
+	//	fmt.Printf("获取通道客户端失败: %v", err)
+	//	return
+	//}
 
 	// 在这里可以使用 channelClient 对象调用链码进行查询或执行事务
 	// ...

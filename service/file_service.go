@@ -196,3 +196,18 @@ func GetFileWithFolder(parentFolderID string) []models.FileResponse {
 	}
 	return response
 }
+
+func DeleteFileById(fileId int) error {
+	var file models.FileModel
+	result := global.DB.First(&file, fileId)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	// 执行删除操作
+	if err := global.DB.Delete(&file).Error; err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"gvf_server/global"
 	"gvf_server/models"
 	"gvf_server/service/common"
@@ -41,7 +42,7 @@ func FindFolderRoot(fileStoreId int) (int, error) {
 }
 
 // CreateFolder 新建文件夹
-func CreateFolder(folderName string, parentId int, fileStoreId int) models.FileFolderModel {
+func CreateFolder(folderName string, parentId int, fileStoreId int) (models.FileFolderModel, error) {
 	fileFolder := models.FileFolderModel{
 		FileFolderName: folderName,
 		ParentFolderID: parentId,
@@ -49,7 +50,13 @@ func CreateFolder(folderName string, parentId int, fileStoreId int) models.FileF
 		Time:           time.Now().Format("2006-01-02 15:04:05"),
 	}
 	global.DB.Create(&fileFolder)
-	return fileFolder
+	// 创建文件夹
+	folderPath := GetCurrentFolderPath(fileFolder)
+	err := os.MkdirAll(global.Path+"/"+folderPath+"/"+folderName, 0755)
+	if err != nil {
+		return models.FileFolderModel{}, err
+	}
+	return fileFolder, err
 }
 
 // GetCurrentFolderPath 获取当前路径所有的父级
@@ -93,4 +100,41 @@ func GetParentFolderIDById(folderId string) (parentId int, err error) {
 	}
 
 	return folder.ParentFolderID, nil
+}
+
+// CurrFolderExists 判断当前目录下是否有同名文件夹
+func CurrFolderExists(parentFolderID, folderName string) bool {
+	var count int64
+
+	global.DB.Model(&models.FileFolderModel{}).Where("parent_folder_id = ? AND file_folder_name = ?", parentFolderID, folderName).Count(&count)
+	if count > 0 {
+		return true
+	}
+	return false
+}
+
+func DeleteFolderById(folderId int) error {
+
+	// 检查是否存在具有给定文件夹ID作为父文件夹ID的子文件夹
+	var count int64
+	global.DB.Model(&models.FileFolderModel{}).Where("parent_folder_id = ?", folderId).Count(&count)
+	if count > 0 {
+		return errors.New("该文件夹包含子文件夹，无法删除")
+	}
+	global.DB.Model(&models.FileModel{}).Where("parent_folder_id = ?", folderId).Count(&count)
+	if count > 0 {
+		return errors.New("该文件夹包含子文件，无法删除")
+	}
+	var folder models.FileFolderModel
+	result := global.DB.First(&folder, folderId)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	// 执行删除操作
+	if err := global.DB.Delete(&folder).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

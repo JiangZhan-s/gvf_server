@@ -25,7 +25,7 @@ type FileModel struct {
 }
 
 type FileResponse struct {
-	ID         uint      `json:"id"`
+	ID         uint
 	Name       string    `json:"name"`
 	UpdateTime time.Time `json:"update_time"`
 	SizeStr    string    `json:"size_str"`
