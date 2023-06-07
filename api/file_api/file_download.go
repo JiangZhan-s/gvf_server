@@ -62,6 +62,8 @@ func (FileApi) FileDownloadByIdView(c *gin.Context) {
 	var d models.Data
 	err = json.Unmarshal([]byte(msg), &d)
 	if err != nil {
+		global.Log.Error(err)
+		c.Status(500)
 		panic(err)
 	}
 

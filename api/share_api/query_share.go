@@ -127,3 +127,18 @@ func (ShareApi) FileInfoQueryByCode(c *gin.Context) {
 		}
 	}
 }
+
+func (ShareApi) ShareCountView(c *gin.Context) {
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*jwts.CustomClaims)
+	userID := claims.UserID
+
+	//获取用户信息
+	_, err := service.GetUserInfo(userID)
+	if err != nil {
+		res.FailWithMessage(fmt.Sprintf("未找到用户:%d", userID), c)
+		return
+	}
+	count, err := service.GetShareCount(userID)
+	res.OkWithData(count, c)
+}

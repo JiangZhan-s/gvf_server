@@ -7,6 +7,7 @@ import (
 	"gvf_server/models/res"
 	"gvf_server/service"
 	"gvf_server/utils/jwts"
+	"os"
 	"strconv"
 )
 
@@ -22,7 +23,21 @@ func (FileApi) FileDeleteView(c *gin.Context) {
 	}
 	fileId, err := strconv.Atoi(c.GetHeader("file_id"))
 
-	service.DeleteFileById(fileId)
+	file := service.GetFileInfo(c.GetHeader("file_id"))
+	if err != nil {
+		res.FailWithMessage("获取文件信息失败", c)
+		global.Log.Error(err)
+		return
+	}
+	filePath := global.Path + file.FilePath + "/" + file.FileName + file.Postfix
+	err = os.Remove(filePath)
+	if err != nil {
+		res.FailWithMessage("删除文件失败", c)
+		global.Log.Error(err)
+		return
+	}
+
+	err = service.DeleteFileById(fileId)
 	if err != nil {
 		res.FailWithMessage("失败了", c)
 		global.Log.Error(err)

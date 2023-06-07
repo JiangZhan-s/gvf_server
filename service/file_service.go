@@ -60,7 +60,7 @@ func GetUserFile(parentId string, storeId int) (files []models.FileModel) {
 }
 
 // GetUserFileAll 获取用户的文件
-func GetUserFileAll(storeId int, cr models.PageInfo, parentFolderId string) (files []models.FileModel, count int64, err error) {
+func GetUserFileAll(storeId int, cr models.PageInfo) (files []models.FileModel, count int64, err error) {
 	searchCond := "file_store_id = ? "
 	searchValues := []interface{}{storeId}
 	files, count, err = common.ComList(models.FileModel{}, common.Option{PageInfo: cr}, searchCond, searchValues...)
@@ -112,9 +112,11 @@ func GetFileDetailUse(fileStoreId int) map[string]int64 {
 }
 
 // GetTypeFile 根据文件类型获取文件
-func GetTypeFile(fileType, fileStoreId int) (files []models.FileModel) {
-	global.DB.Find(&files, "file_store_id = ? and type = ?", fileStoreId, fileType)
-	return
+func GetTypeFile(fileStoreId int, cr models.PageInfo) (files []models.FileModel, count int64, err error) {
+	searchCond := "file_store_id = ? and type = ? "
+	searchValues := []interface{}{fileStoreId, cr.Type}
+	files, count, err = common.ComList(models.FileModel{}, common.Option{PageInfo: cr}, searchCond, searchValues...)
+	return files, count, err
 }
 
 // CurrFileExists 判断当前文件夹是否有同名文件

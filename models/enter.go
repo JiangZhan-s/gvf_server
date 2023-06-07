@@ -5,6 +5,7 @@ type PageInfo struct {
 	Key   string `form:"key"`
 	Limit int    `form:"limit"`
 	Sort  string `form:"sort"`
+	Type  int    `form:"type"`
 }
 
 type FolderInfo struct {

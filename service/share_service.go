@@ -33,3 +33,8 @@ func GetShareByHash(hash string) models.ShareModel {
 	global.DB.First(&share, "hash = ?", hash)
 	return share
 }
+
+func GetShareCount(userId uint) (count int64, err error) {
+	err = global.DB.Model(&models.ShareModel{}).Where("user_id = ?", userId).Count(&count).Error
+	return
+}

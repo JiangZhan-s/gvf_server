@@ -66,3 +66,18 @@ func (FileFolderApi) ParentFolderIdView(c *gin.Context) {
 	}
 	res.OkWithData(parentFolderId, c)
 }
+
+func (FileFolderApi) FolderCountView(c *gin.Context) {
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*jwts.CustomClaims)
+	userID := claims.UserID
+
+	//获取用户信息
+	user, err := service.GetUserInfo(userID)
+	if err != nil {
+		res.FailWithMessage(fmt.Sprintf("未找到用户:%d", userID), c)
+		return
+	}
+	count, err := service.GetFolderCount(user.FileStoreID)
+	res.OkWithData(count, c)
+}

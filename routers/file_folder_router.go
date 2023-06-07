@@ -11,4 +11,5 @@ func (router RouterGroup) FileFolderRouter() {
 	router.POST("add_file_folder", middleware.JwtAuth(), app.FolderAddView)
 	router.GET("query_parent_folder_id", middleware.JwtAuth(), app.ParentFolderIdView)
 	router.POST("folder_delete", middleware.JwtAuth(), app.FolderDeleteView)
+	router.GET("query_folder_count", middleware.JwtAuth(), app.FolderCountView)
 }

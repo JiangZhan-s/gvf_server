@@ -52,7 +52,7 @@ func CreateFolder(folderName string, parentId int, fileStoreId int) (models.File
 	global.DB.Create(&fileFolder)
 	// 创建文件夹
 	folderPath := GetCurrentFolderPath(fileFolder)
-	err := os.MkdirAll(global.Path+"/"+folderPath+"/"+folderName, 0755)
+	err := os.MkdirAll(global.Path+"/"+folderPath, 0755)
 	if err != nil {
 		return models.FileFolderModel{}, err
 	}
@@ -82,7 +82,7 @@ func GetFolderByParent(storeId int, cr models.PageInfo) (files []models.FileMode
 
 // GetFolderById 根据ID获取文件夹
 func GetFolderById(folderId string) (folder models.FileFolderModel, err error) {
-	err = global.DB.Where("id = ", folderId).First(&folder).Error
+	err = global.DB.Where("id = ? ", folderId).First(&folder).Error
 	if err != nil {
 		return folder, err
 	}
@@ -137,4 +137,9 @@ func DeleteFolderById(folderId int) error {
 	}
 
 	return nil
+}
+
+func GetFolderCount(storeId int) (count int64, err error) {
+	err = global.DB.Model(&models.FileFolderModel{}).Where("file_store_id = ?", storeId).Count(&count).Error
+	return
 }
