@@ -9,6 +9,7 @@ import (
 	"gvf_server/service"
 	"gvf_server/utils"
 	"gvf_server/utils/jwts"
+	"gvf_server/utils/valid"
 	"io"
 	"os"
 	"strconv"
@@ -37,6 +38,28 @@ func (p *ProgressTracker) Write(data []byte) (int, error) {
 	return n, nil
 }
 
+type ProgressWriter struct {
+	Writer   io.Writer
+	Progress *ProgressTracker
+}
+
+func (pw *ProgressWriter) Write(p []byte) (n int, err error) {
+	n, err = pw.Writer.Write(p)
+	pw.Progress.CurrentSize += int64(n)
+	pw.Progress.UpdateProgress()
+	return n, err
+}
+func (pt *ProgressTracker) UpdateProgress() {
+	// 计算进度百分比
+	percentage := float64(pt.CurrentSize) / float64(pt.TotalSize) * 100
+
+	// 更新进度信息，例如设置HTTP响应头或发送进度事件等
+	// 这里是一个示例，您可以根据实际需求进行修改
+	pt.Context.Header("X-Progress", fmt.Sprintf("%.2f", percentage))
+	pt.Context.Header("X-Total-Size", strconv.FormatInt(pt.TotalSize, 10))
+	pt.Context.Header("X-Current-Size", strconv.FormatInt(pt.CurrentSize, 10))
+}
+
 func (FileApi) FileUploadView(c *gin.Context) {
 	_claims, _ := c.Get("claims")
 	claims := _claims.(*jwts.CustomClaims)
@@ -48,6 +71,21 @@ func (FileApi) FileUploadView(c *gin.Context) {
 		res.FailWithMessage(fmt.Sprintf("未找到用户:%d", userID), c)
 		return
 	}
+
+	publicKeyPEM, err := os.ReadFile("public.pem")
+	if err != nil {
+		global.Log.Fatal(err)
+		res.FailWithMessage("读取密钥失败", c)
+		return
+	}
+
+	publicKey, err := valid.DecodePublicKeyFromPEM(publicKeyPEM)
+	if err != nil {
+		global.Log.Fatal(err)
+		res.FailWithMessage("读取密钥失败", c)
+		return
+	}
+
 	folderID := c.GetHeader("folder_id")
 	//接收上传文件
 	file, header, err := c.Request.FormFile("file")
@@ -83,7 +121,7 @@ func (FileApi) FileUploadView(c *gin.Context) {
 		return
 	}
 	defer newFile.Close()
-
+	fileContent, err := io.ReadAll(file)
 	// 创建进度追踪器
 	progress := &ProgressTracker{
 		Context:     c,
@@ -91,12 +129,26 @@ func (FileApi) FileUploadView(c *gin.Context) {
 		CurrentSize: 0,
 	}
 	//将上传文件拷贝至新创建的文件中
-	//_, err = io.Copy(newFile, file)
-	_, err = io.Copy(newFile, io.TeeReader(file, progress))
+	encryptedFileContent, err := valid.EncryptWithRSA(publicKey, fileContent)
 	if err != nil {
-		res.FailWithMessage("文件拷贝错误", c)
-		return
+		global.Log.Fatal(err)
+		res.FailWithMessage("加密失败", c)
 	}
+	// 创建包装后的写入器
+	progressWriter := &ProgressWriter{
+		Writer:   newFile,
+		Progress: progress,
+	}
+	_, err = progressWriter.Write(encryptedFileContent)
+	if err != nil {
+		global.Log.Fatal(err)
+	}
+	//_, err = io.Copy(newFile, file)
+	//_, err = io.Copy(newFile, io.TeeReader(file, progress))
+	//if err != nil {
+	//	res.FailWithMessage("文件拷贝错误", c)
+	//	return
+	//}
 
 	//将光标移至开头
 	_, err = newFile.Seek(0, 0)
@@ -109,7 +161,6 @@ func (FileApi) FileUploadView(c *gin.Context) {
 	fileID := service.CreateFile("/"+folderPath, header.Filename, fileSize, folderID, user.FileStoreID, int(user.ID))
 	//上传成功减去相应剩余容量
 	service.SubtractSize(fileSize, user.FileStoreID)
-	fileContent, err := os.ReadFile(global.Path + "/" + folderPath + "/" + header.Filename)
 	maxRetry := 5 // 设置最大重试次数
 	for i := 0; i < maxRetry; i++ {
 		msg, err := global.ServiceSetup.StoreDataHash(fileID, hashData, string(fileContent))

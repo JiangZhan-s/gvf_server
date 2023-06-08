@@ -11,6 +11,7 @@ import (
 	"gvf_server/service"
 	"gvf_server/utils"
 	"gvf_server/utils/jwts"
+	"gvf_server/utils/valid"
 	"os"
 	"path"
 	"time"
@@ -120,15 +121,27 @@ func (FileApi) FileDownloadByIdView(c *gin.Context) {
 	defer file.Close()
 	fmt.Println("文件打开成功")
 
-	hashData := utils.GetSHA256HashCode(file)
 	fileContent, _ := os.ReadFile(filePath)
-	fmt.Println(hashData)
+	privateKeyPEM, err := os.ReadFile("private.pem")
+	if err != nil {
+		global.Log.Fatal(err)
+		res.FailWithMessage("读取密钥失败", c)
+		return
+	}
+
+	privateKey, err := valid.DecodePrivateKeyFromPEM(privateKeyPEM)
+	if err != nil {
+		global.Log.Fatal(err)
+		res.FailWithMessage("读取密钥失败", c)
+		return
+	}
+	decryptedFileContent, err := valid.DecryptWithRSA(privateKey, fileContent)
 	//对比链上连下数据哈希是否相等
 	maxRetry := 5
 	var msg string
 
 	for i := 0; i < maxRetry; i++ {
-		msg, err = global.ServiceSetup.VerifyDataHash(fileId, string(fileContent))
+		msg, err = global.ServiceSetup.VerifyDataHash(fileId, string(decryptedFileContent))
 		if err != nil {
 			fmt.Printf("Error: %s, retrying...\n", err.Error())
 		} else {
@@ -142,8 +155,28 @@ func (FileApi) FileDownloadByIdView(c *gin.Context) {
 		return
 	}
 	//将文件作为附件返回r给客户端进行下载
+	// 创建临时文件
+	tmpFile, err := os.CreateTemp("", "download-*.tmp")
+	if err != nil {
+		// 处理创建临时文件错误
+		res.FailWithMessage("无法创建临时文件", c)
+		return
+	}
+	defer os.Remove(tmpFile.Name())
+
+	// 将解密后的文件内容写入临时文件
+	_, err = tmpFile.Write(decryptedFileContent)
+	if err != nil {
+		// 处理写入文件错误
+		res.FailWithMessage("无法写入文件", c)
+		return
+	}
+
+	// 获取临时文件的路径和文件名
+	filePathTemp := tmpFile.Name()
+
 	//调用函数传输文件
-	c.FileAttachment(filePath, fileName)
+	c.FileAttachment(filePathTemp, fileName)
 
 	// 更新下载次数
 	service.DownloadNumAdd(fileId)
