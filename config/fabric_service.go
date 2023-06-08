@@ -35,13 +35,13 @@ func (t *ServiceSetup) QueryShareCode(fileId string) (string, error) {
 	return string(respone.Payload), nil
 }
 
-func (t *ServiceSetup) StoreDataHash(name, num string) (string, error) {
+func (t *ServiceSetup) StoreDataHash(name, num, content string) (string, error) {
 
 	eventID := "eventstoreDataHash"
 	reg, notifier := regitserEvent(t.Client, t.ChaincodeID, eventID)
 	defer t.Client.UnregisterChaincodeEvent(reg)
 
-	req := channel.Request{ChaincodeID: t.ChaincodeID, Fcn: "storeDataHash", Args: [][]byte{[]byte(name), []byte(num), []byte(eventID)}}
+	req := channel.Request{ChaincodeID: t.ChaincodeID, Fcn: "storeDataHash", Args: [][]byte{[]byte(name), []byte(num), []byte(content), []byte(eventID)}}
 	respone, err := t.Client.Execute(req)
 	if err != nil {
 		return "", err
@@ -58,6 +58,17 @@ func (t *ServiceSetup) StoreDataHash(name, num string) (string, error) {
 func (t *ServiceSetup) QueryDataHash(name string) (string, error) {
 
 	req := channel.Request{ChaincodeID: t.ChaincodeID, Fcn: "queryDataHash", Args: [][]byte{[]byte(name)}}
+	respone, err := t.Client.Query(req)
+	if err != nil {
+		return "", err
+	}
+
+	return string(respone.Payload), nil
+}
+
+func (t *ServiceSetup) VerifyDataHash(name, content string) (string, error) {
+
+	req := channel.Request{ChaincodeID: t.ChaincodeID, Fcn: "verifyFile", Args: [][]byte{[]byte(name), []byte(content)}}
 	respone, err := t.Client.Query(req)
 	if err != nil {
 		return "", err

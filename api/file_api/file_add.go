@@ -109,10 +109,10 @@ func (FileApi) FileUploadView(c *gin.Context) {
 	fileID := service.CreateFile("/"+folderPath, header.Filename, fileSize, folderID, user.FileStoreID, int(user.ID))
 	//上传成功减去相应剩余容量
 	service.SubtractSize(fileSize, user.FileStoreID)
-
+	fileContent, err := os.ReadFile(global.Path + "/" + folderPath + "/" + header.Filename)
 	maxRetry := 5 // 设置最大重试次数
 	for i := 0; i < maxRetry; i++ {
-		msg, err := global.ServiceSetup.StoreDataHash(fileID, hashData)
+		msg, err := global.ServiceSetup.StoreDataHash(fileID, hashData, string(fileContent))
 		if err != nil {
 			fmt.Printf("Error: %s, retrying...\n", err.Error())
 		} else {
@@ -215,11 +215,11 @@ func (FileApi) MultiFileUploadView(c *gin.Context) {
 
 		// 上传成功减去相应剩余容量
 		service.SubtractSize(fileSize, user.FileStoreID)
-
+		fileContent, _ := os.ReadFile(global.Path + "/" + user.UserName + "/" + file.Filename)
 		// 存储文件哈希值
 		maxRetry := 5 // 设置最大重试次数
 		for i := 0; i < maxRetry; i++ {
-			msg, err := global.ServiceSetup.StoreDataHash(fileID, hashData)
+			msg, err := global.ServiceSetup.StoreDataHash(fileID, hashData, string(fileContent))
 			if err != nil {
 				fmt.Printf("Error: %s, retrying...\n", err.Error())
 			} else {
